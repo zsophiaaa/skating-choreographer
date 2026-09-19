@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skating Choreographer</title>
+<link rel="stylesheet" href="css/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>&#9976;</text></svg>">
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <span class="logo">&#9976;</span>
+    <div>
+      <div class="btitle">Skating Choreographer</div>
+      <div class="bsub">build a program · see the line · line it up with the music</div>
+    </div>
+  </div>
+
+  <div class="progmeta">
+    <input id="progName" class="nameInput" value="Untitled Program" spellcheck="false">
+    <label class="fld">Level
+      <select id="levelSel"></select>
+    </label>
+    <label class="fld">BPM
+      <input id="bpmInput" type="number" min="40" max="220" step="0.5" value="96">
+    </label>
+    <button id="tapBtn" class="btn ghost" title="Tap along with the music to set the tempo">Tap</button>
+  </div>
+
+  <div class="topActions">
+    <button class="btn" id="galleryBtn" title="Browse the built-in programs, including the famous-skater study patterns">Program Gallery</button>
+    <div class="menuWrap">
+      <button class="btn" id="newBtn">New ▾</button>
+      <div class="menu" id="newMenu">
+        <button data-act="blank">Blank program<span class="msub">opens in a new tab</span></button>
+        <button data-act="duplicate">Duplicate this one<span class="msub">to try a variation side by side</span></button>
+        <button data-act="remix">Remix: mix and match sections…<span class="msub">five variants of each part of the program</span></button>
+        <button data-act="auto">Auto-generate a skeleton…<span class="msub">a plausible frame at your level</span></button>
+        <button data-act="protocol">Build from a competition protocol…<span class="msub">paste an ISU element list for exact content</span></button>
+        <button data-act="import">Import .json…</button>
+      </div>
+    </div>
+    <div class="menuWrap">
+      <button class="btn primary" id="exportBtn">Export ▾</button>
+      <div class="menu" id="exportMenu">
+        <div class="mtitle">Downloads a file</div>
+        <button data-act="json">Program file<span class="msub">.json — re-openable here, keeps everything</span></button>
+        <button data-act="all">All open programs<span class="msub">.json — every tab in one file</span></button>
+        <button data-act="png">Pattern diagram<span class="msub">.png — the rink picture</span></button>
+        <button data-act="csv">Element list<span class="msub">.csv — opens in Excel / Sheets</span></button>
+        <hr>
+        <div class="mtitle">Opens a print window</div>
+        <button data-act="sheet">Coach sheet<span class="msub">diagram + full element table</span></button>
+        <button data-act="card">Pocket cheat card<span class="msub">counts + notation only</span></button>
+      </div>
+    </div>
+    <button class="btn ghost" id="helpBtn" title="Keyboard shortcuts and how it works">?</button>
+  </div>
+</header>
+
+<nav class="progTabs" id="progTabs">
+  <div class="ptList" id="ptList"></div>
+  <button class="ptAdd" id="ptAdd" title="New program in a new tab">+</button>
+  <div class="ptSpacer"></div>
+  <label class="ptCompare">Compare with
+    <select id="refSel"><option value="-1">nothing</option></select>
+  </label>
+</nav>
+
+<main class="layout">
+
+  <!-- ================= LIBRARY ================= -->
+  <aside class="panel library">
+    <div class="panelHead">
+      <h2>Element Library</h2>
+      <span class="count" id="libCount"></span>
+    </div>
+    <div class="libControls">
+      <input id="libSearch" class="search" placeholder="Search: bracket, spread eagle, twizzle…" spellcheck="false">
+      <div class="rowBetween">
+        <label class="mini">Max difficulty
+          <input id="diffFilter" type="range" min="1" max="5" value="5">
+          <span id="diffVal">5</span>
+        </label>
+        <label class="mini chk"><input type="checkbox" id="fitOnly"> fits my edge</label>
+      </div>
+      <div class="cats" id="catFilter"></div>
+    </div>
+    <div class="libList" id="libList"></div>
+  </aside>
+
+  <!-- ================= VIEWPORT ================= -->
+  <section class="stage">
+    <canvas id="view"></canvas>
+
+    <div class="camBar" id="camBar">
+      <button data-cam="overhead" class="on">Overhead</button>
+      <button data-cam="judge">Judge's eye</button>
+      <button data-cam="front">Front</button>
+      <button data-cam="follow">Follow</button>
+      <button data-cam="close">Close / line</button>
+      <button data-cam="orbit">Orbit</button>
+    </div>
+
+    <div class="viewWrap">
+      <button class="viewBtn" id="viewBtn">View ▾</button>
+      <div class="viewPanel" id="viewPanel">
+        <div class="vpTitle">Tracing on the ice</div>
+        <label class="vpRadio"><input type="radio" name="tracemode" value="all" checked> every element</label>
+        <label class="vpRadio"><input type="radio" name="tracemode" value="current"> selected element only</label>
+        <label class="vpRadio"><input type="radio" name="tracemode" value="none"> none</label>
+        <div class="vpTitle">Rink</div>
+        <label><input type="checkbox" id="tgMark" checked> hockey markings</label>
+        <label><input type="checkbox" id="tgAxes" checked> long / short axis</label>
+        <label><input type="checkbox" id="tgWalls" checked> boards in 3D</label>
+        <div class="vpTitle">Overlays</div>
+        <label><input type="checkbox" id="tgCusps" checked> turn cusp dots</label>
+        <label><input type="checkbox" id="tgGhosts" checked> motion trail</label>
+        <label><input type="checkbox" id="tgHeat"> ice heatmap</label>
+        <div class="vpTitle">Comparison</div>
+        <label><input type="checkbox" id="tgRef" checked> show its tracing</label>
+        <label><input type="checkbox" id="tgRefSkater"> show its skater too</label>
+        <button class="btn ghost sm vpClean" id="cleanBtn">Clean ice (hide everything)</button>
+      </div>
+    </div>
+
+    <div class="hud" id="hud"></div>
+    <div class="hudRight" id="hudRight"></div>
+    <div class="dropHint" id="dropHint">Drop an audio file anywhere to load your music</div>
+  </section>
+
+  <!-- ================= PROGRAM ================= -->
+  <aside class="panel program">
+    <div class="tabs" id="tabs">
+      <button data-tab="prog" class="on">Program</button>
+      <button data-tab="insp">Element</button>
+      <button data-tab="anal">Analysis</button>
+      <button data-tab="ext">Extension Lab</button>
+    </div>
+
+    <div class="tabBody" id="tab-prog">
+      <div class="progStats" id="progStats"></div>
+      <div class="progList" id="progList"></div>
+      <div class="progFoot">
+        <button class="btn ghost sm" id="repairBtn">Fix all seams</button>
+        <button class="btn ghost sm" id="clearBtn">Clear</button>
+      </div>
+    </div>
+
+    <div class="tabBody hidden" id="tab-insp"><div class="empty">Select an element in the program to edit it.</div></div>
+    <div class="tabBody hidden" id="tab-anal"></div>
+    <div class="tabBody hidden" id="tab-ext"></div>
+  </aside>
+</main>
+
+<!-- ================= TRANSPORT + MUSIC ================= -->
+<footer class="transport">
+  <div class="tcontrols">
+    <button id="playBtn" class="playBtn" title="Play / pause (space)">▶</button>
+    <button id="stopBtn" class="btn ghost sm" title="Back to the start">■</button>
+    <button id="loopBtn" class="btn ghost sm" title="Loop the selected element (L)">↻ loop</button>
+    <span class="clock" id="clock">0:00.0 / 0:00.0</span>
+    <span class="counter" id="counter">1&amp;1</span>
+    <label class="mini speed">speed
+      <input id="speedRange" type="range" min="10" max="150" value="100">
+      <span id="speedVal">1.00×</span>
+    </label>
+    <label class="mini"><input type="checkbox" id="tgMusic" checked> music</label>
+    <button class="btn ghost sm" id="musicBtn">Load music…</button>
+    <button class="btn ghost sm" id="hitBtn" title="Tap M during playback to mark a musical accent">Mark hit (M)</button>
+    <span class="musicName" id="musicName">no music loaded</span>
+  </div>
+  <canvas id="wave"></canvas>
+</footer>
+
+<input type="file" id="fileAudio" accept="audio/*" hidden>
+<input type="file" id="fileJson" accept="application/json,.json" hidden>
+
+<div class="modal hidden" id="gallery">
+  <div class="modalBox wide">
+    <button class="modalClose" id="galleryClose">×</button>
+    <h2>Program Gallery</h2>
+    <p class="galIntro">Click a card to open it in a new tab. <b>Open as comparison</b> lays its pattern under
+      whatever you are working on, so you can steal its spacing.</p>
+    <div class="galGrid" id="galGrid"></div>
+    <p class="galNote"></p>
+  </div>
+</div>
+
+<div class="modal hidden" id="modal">
+  <div class="modalBox">
+    <button class="modalClose" id="modalClose">×</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/poses.js"></script>
+<script src="js/library.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/render.js"></script>
+<script src="js/music.js"></script>
+<script src="js/presets.js"></script>
+<script src="js/local.js"></script><!-- your own programs and remix deck, built by tools/publish-local.sh from private/ (optional) -->
+<script src="js/export.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

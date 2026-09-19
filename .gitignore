@@ -1,0 +1,33 @@
+.DS_Store
+*.log
+node_modules/
+inbox/
+
+# music is the skater's own; the measured envelope (music/*-envelope.json) is committed instead
+*.mp3
+*.m4a
+*.wav
+
+# experiment intermediates — each version keeps program.json, notes.md and verify.json
+experiments/**/steers/
+experiments/**/steer*.json
+experiments/**/draft*.json
+experiments/**/anchored*.json
+experiments/**/verify-*.json
+experiments/**/in-*.json
+experiments/**/s6-*.json
+experiments/**/p[0-9]*.json
+experiments/**/tail.json
+experiments/**/c3*.json
+experiments/**/scores.txt
+experiments/**/tools/
+experiments/**/*.js
+experiments/**/steer-candidates/
+experiments/**/chain-unsteered.json
+experiments/**/lib.txt
+
+# your own programs, profile and remix deck stay on your machine
+private/
+js/local.js
+.agents/profiles/ACTIVE
+.agents/profiles/local-*.md
