@@ -18,6 +18,8 @@ const presets = specs.map((spec) => {
     const o = {};
     if (e.aim) o.aim = +(+e.aim).toFixed(2);
     if (e.gapBefore) o.gapBefore = +(+e.gapBefore).toFixed(3);
+    if (e.radiusScale != null && e.radiusScale !== 1) o.radiusScale = e.radiusScale;
+    if (e.distScale != null && e.distScale !== 1) o.distScale = e.distScale;
     if (e.chst) o.chst = true;
     if (e.arms) o.arms = e.arms;
     if (e.note) o.note = e.note;

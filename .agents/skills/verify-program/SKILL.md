@@ -57,6 +57,12 @@ gapBefore, note, chst, arms, distScale`; `distScale` is clamped to 0.5–1.5).
 | `jump.runway` | ≥ 10 m (`jumpRunwayMin`) | unsafe | metres along the landing heading before the boards |
 | `jump.edge` | ≥ 0.8 s (`jumpEdgeSecondsMin`) | unsafe | time on the takeoff code before the first air sample, counting back through the element before |
 | `spin.revPerSec` | 1.2–3.0 (`spinRevPerSec`) | unsafe | `lib.rev` over the spin phases' seconds (6 beats of scratch spin = 3.8) |
+| `jump.runIn` | ≥ 1.6 s (`jumpRunInSecondsMin`) | craft | plain skating in front of the takeoff turn — a jump is not entered out of a corridor of turns |
+| `jump.recovery` | ≥ 1.0 s (`jumpRecoverySecondsMin`) | craft | plain skating after the landing (after the whole combination) before the next turn or shape |
+| `jump.spacing` | ≥ 5 s (`jumpGapSecondsMin`) | craft | between one jump element landing and the next taking off |
+| `spin.setup` | ≥ 1.5 s (`spinSetupSecondsMin`) | craft | quiet skating into the entry edge, counting the spin's own arc; a held shape straight into a spin reads 0 |
+| `held.seconds` | ≥ 2.5 s (`heldSecondsMin`) | craft | a spiral, Bauer, eagle or lunge that flashes past is not a line |
+| `connector.difficulty` | ≤ 4 (`connectorDiffMax`) | craft | difficulty belongs in the step sequence; elsewhere it is risk for nothing |
 | `chst.oneFoot` | ≤ 6.5 s (`chstOneFootMax`) | unsafe | longest run on one foot in the sequence, from the samples' `foot` |
 | `rotation` | 42–58 % CCW | craft | |
 | `ends`, `sides` | each ≥ 18 % | craft | raw fractions, not the rounded `thirds` |

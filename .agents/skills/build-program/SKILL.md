@@ -54,6 +54,16 @@ chst, arms, note } ] } }` (`heading` in degrees; `{x:-6,y:0,heading:0.25}` is
 the La La Land start) — then `verify` and check `hard.brokenSeams` is **0
 before doing anything else**.
 
+**Budget the room before the beats run out.** Lay the scored elements on the
+music first, then fill *backwards* from each one: a jump needs ≥ 1.6 s of
+plain skating and then its entry turn; a landing needs ≥ 1 s of skating before
+anything else happens; a spin needs ≥ 1.5 s of quiet edge; a held shape needs
+≥ 2.5 s to read (**program-craft** §2). Those are beats you cannot spend on
+transitions — decide them first and let the connecting material have what is
+left, not the other way round. If it does not fit, the program has one
+element too many or a shape held too long, and that is the decision to bring
+to the skater.
+
 Give every element an **arm track and a note** as you write it, not after
 (**arm-choreography**). Mark the step sequence run `chst: true`, including its
 lead-in steps, so it covers half the ice (**step-sequence**).

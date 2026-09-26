@@ -39,7 +39,50 @@ any such table for another skater or track with
 6. Coverage of ~40–45% of the rink's cells is normal for a slower skater; ~50%
    for a fast one. Do not chase coverage at the cost of the rules above.
 
-## 2. Connecting material
+## 2. Room to skate — the elements are the program
+
+The jumps, the spins and the sequence are what the skater is judged on and what
+they will remember being proud of. Everything else exists to deliver them with
+speed and to get them out of them safely. A program that is *interesting*
+between the elements and cramped at them is the wrong way round.
+
+6. **A jump is approached on plain skating, not out of a corridor of turns.**
+   At least `PLACE.jumpRunInSecondsMin` (1.6 s) of edges, strokes, crossovers
+   or rolls immediately in front of the takeoff turn — `jump.runIn` in the
+   report. One turn (the three, the mohawk, the step onto the edge) may sit
+   between that run and the jump; a *second* turn there is what makes a
+   take-off feel rushed. Detailed footwork before a jump costs speed and adds
+   nothing: the judge sees the jump, not the fuss before it.
+7. **Every landing gets room to finish.** At least
+   `PLACE.jumpRecoverySecondsMin` (1.0 s) of plain skating after the landing
+   (after the whole combination) before the next turn, held shape or spin —
+   `jump.recovery`. A landing that runs straight into a turn is a check-out
+   the skater cannot make, and it is where a clean jump still looks bad.
+8. **Jumps are spread through the program.** At least
+   `PLACE.jumpGapSecondsMin` (5 s) between one jump element landing and the
+   next taking off (`jump.spacing`; combinations are one element). Two jumps
+   in the same phrase read as a jumping pass, not choreography, and the second
+   one gets no preparation.
+9. **A spin needs a set-up, not just an entry.** At least
+   `PLACE.spinSetupSecondsMin` (1.5 s) of quiet skating into the entry edge
+   (`spin.setup`, which counts the spin's own entry arc), at
+   ≤ `PLACE.spinEntrySpeedMax` (3.5 m/s). **Never a held shape straight into a
+   spin** — a Bauer, spiral or lunge has to be abandoned to get into the
+   entry, and the spin travels. Put one plain edge between them; it costs four
+   beats and it is the difference between a centred spin and a scraped one.
+10. **A held shape is held long enough to read**: ≥ `PLACE.heldSecondsMin`
+    (2.5 s) for a spiral, Bauer, eagle or lunge (`held.seconds`). A 1.9 s
+    spiral is a position the skater passed through, not a line.
+11. **Difficulty belongs in the step sequence.** Outside it, connecting
+    material stays at or below `PLACE.connectorDiffMax` (library difficulty 4)
+    — `connector.difficulty`. A hard turn used as glue is risk for nothing.
+
+Those five numbers are per-level: a level's `rules` block in `js/engine.js`
+overrides any of them (`jumpRunInSecondsMin`, `jumpRecoverySecondsMin`,
+`jumpGapSecondsMin`, `spinSetupSecondsMin`, `heldSecondsMin`,
+`connectorDiffMax`), so a beginner can be given more room, not less.
+
+## 3. Connecting material
 
 7. **Speed builders ≥ 35% of the connecting beats** (`builderShare`). What
    counts is `PLACE.speedBuilders`: `xover-f/b`, `stroke-f/b`,
@@ -77,6 +120,15 @@ any such table for another skater or track with
    | `step-fio.R` 2 → `three-fo` 3 → `power-pull-b` 6 → Lutz | 11+2 | — | out of the knee slide (C3) |
    | `crossroll-b.R` 4 → `xover-b.R` 6 → `mohawk-bo` 3 → `stroke-f.R` 4 → `three-fo` 3 | 19+2 | CW turn-round | rotation repair between two LBI jumps |
    A jump's landing edge adds ~+25–30° of curl of its own.
+8b. **Play to the skater's strengths.** Between the elements, choose the
+   version of a shape they are *good* at over the version that is nominally
+   harder: a forward outside spiral held four seconds beats a forward inside
+   spiral held two; the jump entry they own (for many skaters a mohawk into
+   the flip and Salchow, a back cross roll onto the Lutz edge) beats a clever
+   one. Their profile lists what they own; if it does not say, ask, and write
+   the answer down. Nothing in a program is worth less than a difficult thing
+   done badly on the way to a jump.
+
 9. **Rotation balance 42–58% CCW** (`PLACE.rotationBand`). Forward crossovers on LFO and backward on
    RBO both turn left; mirror half the runs (`mirror: true`) so the deck does
    not spin one way. Rotation also depends on placement — `buildPath` bends
@@ -87,7 +139,7 @@ any such table for another skater or track with
 10. **No dead ice.** Glides (`gapBefore`) under ~1.5 s. Anchor elements to the
     music by shortening connectors, not by adding glide.
 
-## 3. Music
+## 4. Music
 
 11. **Jumps on hits, held shapes on silences, the spin on a plateau, the step
     sequence on the sustained climax.** Read the measured envelope
@@ -103,7 +155,7 @@ any such table for another skater or track with
 14. **Come out of a spin into something.** Time the spin so its exit lands on
     the next lift.
 
-## 4. Highlights and memorability
+## 5. Highlights and memorability
 
 15. **One of each highlight.** One Ina Bauer, one spiral, one knee slide, one
     lunge — each is a moment; two of the same is a habit. Do not stack held
@@ -124,7 +176,7 @@ any such table for another skater or track with
     hands, boxing, hands over the head in the air) and the harness counts
     distinct shapes and phrases.
 
-## 5. Realistic speed
+## 6. Realistic speed
 
 18. **Measure it.** Instantaneous speed is `hypot(dx,dy)/dt` between consecutive
     samples; the harness reports the program average and the footwork peak.
@@ -164,7 +216,7 @@ any such table for another skater or track with
     the one 19-count clockwise turn-round available between two LBI jumps is
     `crossroll-b.R, xover-b.R, mohawk-bo, stroke-f.R, three-fo`.
 
-## 6. Talk in counts — and know which clock
+## 7. Talk in counts — and know which clock
 
 Skaters give timings as **counts**: `18&5` = eight-count 18, beat 5 — what
 `fmtCount(beat)` prints. `beat = (N − 1) × 8 + (M − 1)`; seconds = beat × 60 /
@@ -180,7 +232,7 @@ time off the raw waveform without subtracting the offset. A 2-beat jump
 element takes off ~0.3 s after it starts, so "flip on 5&2" means the element
 *starts* on 5&2.
 
-## 7. How the steering enforces 1–5
+## 8. How the steering enforces the placement rules
 
 `steerProgramAsync()` in engine.js: a greedy pass over every element's `aim`
 (direction only, never timing), then joint searches over the three or four

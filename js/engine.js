@@ -821,7 +821,26 @@ const PLACE = {
   chstDifficultMin: 5, chstFamiliesMin: 2,
   chstTurnsPerSecMax: 0.6, chstOneFootMax: 6.5,   // turns per second; the longest run on one foot, seconds (four 3-beat turns and a change)
   chstArmFractionMin: 0.34,
+  // ROOM TO SKATE. The elements are the program; the skater has to arrive at
+  // each one with speed and leave it with room. A jump wants plain skating in
+  // front of it (not a corridor of turns), somewhere to put the landing, and
+  // air between it and the next jump; a spin wants a quiet edge to set up on,
+  // not a held shape that has to be abandoned; a held shape wants long enough
+  // to read. Every one of these is a LEVEL/profile override away from being
+  // stricter (`LEVELS[level].rules`): a beginner needs more room, not less.
+  jumpRunInSecondsMin: 1.6,      // seconds of plain skating before the takeoff turn
+  jumpRecoverySecondsMin: 1.0,   // seconds of plain skating after the landing, before the next turn or shape
+  jumpGapSecondsMin: 5,          // seconds between one jump element's landing and the next takeoff
+  spinSetupSecondsMin: 1.5,      // seconds of quiet skating into the spin's entry edge
+  heldSecondsMin: 2.5,           // a spiral, Bauer, eagle or lunge held shorter than this does not read
+  connectorDiffMax: 4,           // library difficulty allowed outside the step sequence
 };
+
+/** a PLACE threshold, overridable per level (and so per profile) */
+function placeFor(program, key) {
+  const lv = LEVELS[program && program.level] || {}, r = lv.rules || lv.aspire || {};
+  return r[key] != null ? r[key] : PLACE[key];
+}
 
 function analyzePlacement(program, path) {
   const segs = path.segs;
@@ -839,6 +858,23 @@ function analyzePlacement(program, path) {
   // emergency steering (steerCorrection) applied inside an element, degrees
   const steerInside = (s) => samplesOf(s).reduce((t, q) => t + Math.abs(q.corr || 0), 0);
   const heldShape = (s) => (s.lib.cat === 'field' || s.lib.id === 'choreo-knee-slide') && (s.lib.phases || []).some((p) => p.both);
+  // anything the skater rides out slowly and has to push out of: a held shape,
+  // a knee slide, a stop. The element after one is allowed to accelerate.
+  const decelerates = (s) => !!s && (heldShape(s) || s.lib.id === 'choreo-knee-slide' || s.lib.cat === 'stops');
+  // "plain skating": edges, strokes, crossovers, rolls, pulls — the material a
+  // skater gathers speed on. Not turns, not held shapes, not stops.
+  const plain = (q) => !!q && q.lib.cat === 'edges' && q.dist > 0;
+  // seconds of plain skating leading into element i (one turn — the takeoff
+  // turn or the spin entry — may sit between the run and the element)
+  const runInto = (i, allowTurn) => { let j = i - 1, t = 0;
+    if (allowTurn && segs[j] && (segs[j].lib.cat === 'turns' || segs[j].lib.id.startsWith('step-'))) j--;
+    while (plain(segs[j])) { t += segs[j].dur; j--; }
+    return t; };
+  // seconds of plain skating out of element i (through the rest of a combination)
+  const runOutOf = (i) => { let j = i + 1, t = 0;
+    while (segs[j] && comboContinues(segs, j)) j++;
+    while (plain(segs[j])) { t += segs[j].dur; j++; }
+    return t; };
   // the fatigue curve from analyze(): value at the START of each element, as a fraction of the peak
   const fat = []; { let acc = 0; for (const s of segs) { fat.push(acc); acc += s.lib.cost * (s.dur / 4); acc *= 0.97; } }
   const fatMax = Math.max(1e-6, ...fat, fat.length ? fat[fat.length - 1] : 0);
@@ -861,11 +897,14 @@ function analyzePlacement(program, path) {
     const revPerSec = spinSeconds ? totalRev / spinSeconds : 0;
     const prev = segs[i - 1];
     const entrySpeed = prev ? prev.speed : 0;
+    // setup: the plain skating into the spin PLUS the spin's own entry arc
+    const arcF = (s.lib.phases || []).filter((ph) => ph.k === 'arc').reduce((t, ph) => t + ph.f, 0);
+    const setup = runInto(i, true) + arcF * s.dur;
     const minRev = rules.spinMinRev || 0;
     const under = Object.entries(revs).filter(([, r]) => r < minRev).map(([p, r]) => `${p} ${r.toFixed(1)}`);
     return Object.assign(tag(s), { fromCentre: d, ok: d <= PLACE.spinMaxFromCentre, seconds: s.dur,
       revs, revPerSec, totalRev, minRev, underRev: under, revPerSecOk: revPerSec >= PLACE.spinRevPerSec[0] && revPerSec <= PLACE.spinRevPerSec[1],
-      entrySpeed, entry: prev ? prev.lib.id : '—', heldBefore: !!(prev && heldShape(prev)), steerInside: steerInside(s) });
+      entrySpeed, entry: prev ? prev.lib.id : '—', heldBefore: !!(prev && heldShape(prev)), setup, steerInside: steerInside(s) });
   });
 
   // a combination is one jump element; judge it by its first jump. A jump
@@ -887,7 +926,12 @@ function analyzePlacement(program, path) {
     // a jump straight out of the step sequence is entered from the sequence
     // itself — that IS the run-in, and a rewarded one (docs/CHOREOGRAPHY.md §3)
     const outOfSequence = prev && prev.inst && prev.inst.chst;
-    const builtSpeed = outOfSequence || [prev, prev2].some((q) => q && PLACE.speedBuilders.includes(q.lib.id));
+    // speed into the jump: a builder in the three elements before it, or a
+    // long enough plain run-in (a travelling edge builds speed too)
+    const prev3 = segs[i - 3];
+    const runIn = runInto(i, true);
+    const builtSpeed = outOfSequence || runIn >= placeFor(program, 'jumpRunInSecondsMin')
+      || [prev, prev2, prev3].some((q) => q && PLACE.speedBuilders.includes(q.lib.id));
     // the takeoff edge: seconds on the same code before the first air sample,
     // counting back through the element before (and its glide) while the
     // code holds, but never through another jump's air
@@ -918,8 +962,19 @@ function analyzePlacement(program, path) {
     jumps.push(Object.assign(tag(s), { where, ok: where !== 'mid-ice', zoneDist: Math.min(dCentre, dCorner),
       entry: prev ? prev.lib.name : '—', entryId: prev ? prev.lib.id : null, awkward, builtSpeed,
       edgeSeconds, boardsAtTakeoff, boardsAtLanding, runway, speed: s.speed, connSpeed, speedRatio,
-      fatigue, late, hardest: s.lib.diff === maxDiff, beatsAfterTurn, heldBefore: !!(prev && heldShape(prev)), steerInside: steered }));
+      fatigue, late, hardest: s.lib.diff === maxDiff, beatsAfterTurn, heldBefore: !!(prev && heldShape(prev)), steerInside: steered,
+      runIn, recovery: runOutOf(i), sinceJump: (() => { for (let k = i - 1; k >= 0; k--) if (segs[k].lib.cat === 'jumps') return comboContinues(segs, k + 1) && k + 1 === i ? null : s.t0 - segs[k].t1; return null; })() }));
   }
+  // held shapes: long enough to read, and what they run into
+  const heldShapes = segs.map((s, i) => ({ s, i })).filter(({ s }) => s.lib.cat === 'field' && s.dist > 0)
+    .map(({ s, i }) => Object.assign(tag(s), { seconds: s.dur, ok: s.dur >= placeFor(program, 'heldSecondsMin') }));
+  // connecting material harder than the skater is comfortable with: the step
+  // sequence is where difficulty belongs, everywhere else it is a risk for
+  // nothing (the profile's level sets the ceiling)
+  const connDiffMax = placeFor(program, 'connectorDiffMax');
+  const hardConnectors = segs.map((s, i) => ({ s, i }))
+    .filter(({ s }) => !(s.inst && s.inst.chst) && !['jumps', 'spins'].includes(s.lib.cat) && s.lib.diff > connDiffMax)
+    .map(({ s, i }) => Object.assign(tag(s), { diff: s.lib.diff }));
   // emergency steering inside a jump, spin or field move: the path was bent
   // to stay on the ice while the skater was committed to a shape
   const steeredInsideElements = segs.filter((s) => ['jumps', 'spins', 'field'].includes(s.lib.cat))
@@ -936,7 +991,12 @@ function analyzePlacement(program, path) {
     // ice; speeding UP needs a push — a builder (stroke, crossovers, pulls,
     // chassé) or a jump's own take-off. Anything else that jumps in speed is
     // a seam the skater cannot skate.
-    const pushes = PLACE.speedBuilders.includes(b.lib.id) || /^chasse/.test(b.lib.id) || b.lib.cat === 'jumps';
+    // rising out of a held shape (lunge, spiral, Bauer, slide) IS a push, and
+    // the shape itself is deliberately slow — do not read that as a seam step
+    const pushes = PLACE.speedBuilders.includes(b.lib.id) || /^chasse/.test(b.lib.id) || b.lib.cat === 'jumps' || decelerates(a)
+      // a turn's travel is set by its arc, not by a push: its nominal speed is
+      // not the skater accelerating, so it is not a seam the skater can feel
+      || b.lib.cat === 'turns';
     if (d > PLACE.speedStepMax && !pushes) speedStep.push(Object.assign(tag(b), { from: a.speed, to: b.speed, delta: d }));
   }
   // after a stop: the next element starts from nothing unless it pushes
@@ -1017,7 +1077,7 @@ function analyzePlacement(program, path) {
     distinct, oneOffs, memorable: distinct <= PLACE.memorableDistinct,
     offIce: sm.filter((q) => !insideRink(q.x, q.y)).length * DT,
     startFromCentre: s0 ? Math.hypot(s0.x, s0.y) : 0, finishFromCentre: s1 ? Math.hypot(s1.x, s1.y) : 0,
-    glide, steeredInsideElements, speedStep, afterStop, heldBefore,
+    glide, steeredInsideElements, speedStep, afterStop, heldBefore, heldShapes, hardConnectors,
     fatigueAtJumps: jumps.map((j) => j.fatigue),
   };
 }
@@ -1586,6 +1646,10 @@ function placementRules(program, path, analysis, q, sq) {
   { const w = worst(q.spins, (s) => s.entrySpeed, 'max');
     row('spin.entry', 'craft', w ? w.v : null, PLACE.spinEntrySpeedMax, 'max', { unit: 'm/s', at: w && w.it, n: q.spins.filter((s) => s.entrySpeed > PLACE.spinEntrySpeedMax).length, lever: 'a slower edge into the spin',
       msg: w && w.v > PLACE.spinEntrySpeedMax ? `${named(w.it)} is entered at ${w.v.toFixed(1)} m/s from ${w.it.entry} — over ${PLACE.spinEntrySpeedMax} m/s is hard to centre.` : '' }); }
+  { const min = placeFor(program, 'spinSetupSecondsMin'), w = worst(q.spins, (s) => s.setup, 'min');
+    row('spin.setup', 'craft', w ? w.v : null, min, 'min', { unit: 's', at: w && w.it, n: q.spins.filter((s) => s.setup < min).length,
+      lever: 'a plain edge between the shape before and the spin entry',
+      msg: w && w.v < min ? `${named(w.it)} is entered off ${w.it.entry} with ${w.v.toFixed(1)} s of skating into it — a spin needs ${min} s of quiet edge to set up on.` : '' }); }
 
   // --- jumps: zone, entry, speed, safety, ordering ----------------------------
   { const w = worst(q.jumps, (j) => j.zoneDist, 'max');
@@ -1642,6 +1706,29 @@ function placementRules(program, path, analysis, q, sq) {
     msg: `The program finishes ${q.finishFromCentre.toFixed(1)} m from centre — the final pose wants to be near the middle.` });
   row('builders', 'craft', q.builderShare, PLACE.speedBuilderShare, 'min', { unit: '', lever: 'crossovers and stroking instead of held edges',
     msg: `Only ${Math.round(q.builderShare * 100)}% of the connecting material builds speed (crossovers, stroking, power pulls, swing rolls) — the rest is turns and held edges.` });
+
+  { const min = placeFor(program, 'jumpRunInSecondsMin'), w = worst(q.jumps, (j) => j.runIn, 'min');
+    row('jump.runIn', 'craft', w ? w.v : null, min, 'min', { unit: 's', at: w && w.it, n: q.jumps.filter((j) => j.runIn < min).length,
+      lever: 'plain skating (an edge, a swing roll, crossovers) in front of the takeoff turn, not more footwork',
+      msg: w && w.v < min ? `${named(w.it)} has ${w.v.toFixed(1)} s of plain skating in front of it — a jump is approached with room to skate, not out of a corridor of turns (${min} s).` : '' }); }
+  { const min = placeFor(program, 'jumpRecoverySecondsMin'), w = worst(q.jumps, (j) => j.recovery, 'min');
+    row('jump.recovery', 'craft', w ? w.v : null, min, 'min', { unit: 's', at: w && w.it, n: q.jumps.filter((j) => j.recovery < min).length,
+      lever: 'an edge or a roll after the landing before the next turn or shape',
+      msg: w && w.v < min ? `${named(w.it)} lands straight into ${'the next element'} — give the landing ${min} s of skating to check out and finish.` : '' }); }
+  { const min = placeFor(program, 'jumpGapSecondsMin'), spaced = q.jumps.filter((j) => j.sinceJump != null);
+    const w = worst(spaced, (j) => j.sinceJump, 'min');
+    row('jump.spacing', 'craft', w ? w.v : null, min, 'min', { unit: 's', at: w && w.it, n: spaced.filter((j) => j.sinceJump < min).length,
+      lever: 'move a jump to another phrase; the music usually offers one',
+      msg: w && w.v < min ? `${named(w.it)} comes ${w.v.toFixed(1)} s after the previous jump — jumps want ${min} s between them to prepare and land.` : '' }); }
+  { const min = placeFor(program, 'heldSecondsMin'), w = worst(q.heldShapes, (h) => h.seconds, 'min');
+    row('held.seconds', 'craft', w ? w.v : null, min, 'min', { unit: 's', at: w && w.it, n: q.heldShapes.filter((h) => !h.ok).length,
+      lever: 'more beats on the shape — a spiral or Bauer that flashes past reads as nothing',
+      msg: w && w.v < min ? `${named(w.it)} is held ${w.v.toFixed(1)} s — under ${min} s a held shape does not read.` : '' }); }
+  { const max = placeFor(program, 'connectorDiffMax');
+    row('connector.difficulty', 'craft', q.hardConnectors.length ? Math.max(...q.hardConnectors.map((h) => h.diff)) : 0, max, 'max',
+      { unit: '', at: q.hardConnectors[0], n: q.hardConnectors.length,
+        lever: 'the step sequence is where difficulty belongs; connect with material the skater owns',
+        msg: q.hardConnectors.length ? `${q.hardConnectors.length} connecting element(s) above difficulty ${max} outside the step sequence (${q.hardConnectors.map((h) => h.libId).join(', ')}) — risk for nothing.` : '' }); }
 
   // --- the step sequence -------------------------------------------------------
   if (q.chstSpan) {

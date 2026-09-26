@@ -79,7 +79,7 @@ failed the first sweep this way:*
 When it genuinely does not fit, **redesign the variant's idea** rather than
 shipping something unskatable — the swing-roll ending became "Long final pose".
 
-Other floors: a back scratch spin needs ≥ 6 beats (three revolutions), a final
+Other floors: a scratch spin needs ≥ 6 beats (three revolutions at the level's spin rate), a final
 pose ≥ 2, and anything with `dist ≥ 12` needs ≥ 4 beats — or, exactly, the
 `minB` that `node tools/harness.js lib --speedScale X --bpm Y` prints for the
 profile's speed.

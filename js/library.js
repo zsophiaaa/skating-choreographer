@@ -792,11 +792,17 @@ SPIN({ id: 'spin-upright', name: 'Upright Spin', diff: 2, entry: 'LFO', exit: 'R
   ext: 'Grow tall through the spin. Chin level, arms in a defined shape — never "just there".',
   tags: ['spin', 'upright', 'basic'] });
 
-SPIN({ id: 'spin-scratch', name: 'Back Scratch Spin', diff: 3, entry: 'LFO', exit: 'RBI', rev: 9,
+SPIN({ id: 'spin-scratch', name: 'Scratch Spin', diff: 3, entry: 'LFO', exit: 'RBI', rev: 9,
   poses: [{ t: 0, pose: 'glide_deep' }, { t: 0.18, pose: 'spin_upright' }, { t: 0.3, pose: 'spin_scratch' }, { t: 0.93, pose: 'spin_scratch' }, { t: 1, pose: 'presentation' }],
   tip: 'Free foot crosses at the ankle and slides up the skating leg to accelerate. Arms pull to the chest then overhead.',
   ext: 'Everything squeezes toward one vertical line. Any gap between the legs is lost speed.',
   tags: ['spin', 'scratch', 'fast'] });
+
+SPIN({ id: 'spin-back', name: 'Back Spin', diff: 4, entry: 'LFO', exit: 'RBI', rev: 7,
+  poses: [{ t: 0, pose: 'glide_deep' }, { t: 0.2, pose: 'spin_upright' }, { t: 0.32, pose: 'spin_upright' }, { t: 0.93, pose: 'spin_upright' }, { t: 1, pose: 'presentation' }],
+  tip: 'The other foot: a back spin turns on the right back outside edge, free leg crossed in FRONT. It is the jump-landing spin, and it is harder to centre than a scratch spin.',
+  ext: 'Shoulders square over the hips. Most people lean back and travel — stack, then pull.',
+  tags: ['spin', 'back spin', 'jump rotation'] }, 1);
 
 SPIN({ id: 'spin-sit', name: 'Sit Spin', diff: 3, entry: 'LFO', exit: 'RBI', rev: 6, cost: 4,
   poses: [{ t: 0, pose: 'glide_deep' }, { t: 0.18, pose: 'spin_upright' }, { t: 0.34, pose: 'spin_sit' }, { t: 0.88, pose: 'spin_sit' }, { t: 1, pose: 'glide_deep' }],

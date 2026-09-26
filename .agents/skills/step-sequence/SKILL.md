@@ -58,6 +58,18 @@ between them. Putting the foot change *there* does two jobs at once.
 Mirroring cluster B off cluster A (`mirror: true` on the same turn ids) gives
 both rotational directions for free and reads as control.
 
+## Difficulty lives here — and nowhere else
+
+The sequence is the one place in the program where hard turns pay. Outside it,
+connecting material stays at or below the skater's comfortable difficulty
+(`connector.difficulty`, **program-craft** §2.11). And inside it, a sequence
+built from turns the skater *owns* — clean, with room between them — scores
+and looks better than one built from turns they can only just do: a scrappy
+counter is a deduction, a clean bracket is not. Take the honest ceiling from
+their profile and spend the rest of the budget on flow: a plain lead-in roll
+so the combination before it has somewhere to land, an edge between clusters,
+and a travelling roll on the way out that doubles as the next jump's run-in.
+
 ## It has to cover half the ice — visibly
 
 At Aspire levels the ChSt is "one ½ of the ice" — end boards to the centre

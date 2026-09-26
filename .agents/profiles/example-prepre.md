@@ -14,7 +14,7 @@ Current program: `starter-prepre` (gallery card "Pre-Pre Starter").
   ~1:35–1:50, max 4 jump elements, 2 spins, 1 step sequence, singles only).
   If a different federation's sheet applies, encode it first — **level-rules**.
 - Element content: waltz jump, Salchow+toe loop, flip, and one more single;
-  a sit spin and a back scratch spin; one step sequence; two spirals.
+  a sit spin and a scratch spin; one step sequence; two spirals.
 - `speedScale: 0.8` (a learning skater; the library's distances are an
   advanced skater's). Target ~3.5 m/s average, footwork peaking ≤ ~5.3 m/s,
   single-jump takeoff ≤ ~6.5 m/s — check `speed` in `verify`, do not assume.

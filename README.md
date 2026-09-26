@@ -184,7 +184,7 @@ index.html                 layout
 css/app.css                styles
 js/util.js                 vector math, formatting, 8-count helpers
 js/poses.js                skeleton, 47 body poses, 45 arm shapes, 9 arm phrases, blending
-js/library.js              the 135-element library — the content heart
+js/library.js              the 136-element library — the content heart
 js/engine.js               edge model, path integration, analysis, level rules, PLACE, the steer
 js/render.js               the hand-written 3D renderer and the flat pattern diagram
 js/music.js                audio decode, waveform, onset envelope, BPM + phase detection
