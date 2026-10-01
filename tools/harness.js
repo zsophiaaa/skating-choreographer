@@ -66,7 +66,7 @@ function loadProgram(arg) {
       const bad = els.filter((e) => !LIB_BY_ID[e.libId]).map((e) => e.libId);
       if (bad.length) throw new Error('unknown element ids: ' + bad.join(', ') + ' (see: node tools/harness.js lib)');
       // the save format's fields, and only those — a misspelt key would be silently ignored otherwise
-      const FIELDS = ['libId', 'mirror', 'beats', 'radiusScale', 'aim', 'gapBefore', 'note', 'chst', 'arms', 'distScale'];
+      const FIELDS = ['libId', 'mirror', 'beats', 'radiusScale', 'aim', 'gapBefore', 'note', 'chst', 'arms', 'distScale', 'route'];
       const badKeys = els.flatMap((e, i) => Object.keys(e).filter((k) => !FIELDS.includes(k)).map((k) => '#' + i + ' ' + e.libId + '.' + k));
       if (badKeys.length) throw new Error('unknown element fields: ' + badKeys.join(', ') + ' (save format: ' + FIELDS.join(', ') + ')');
       // an unknown arm pose falls back to second position and an unknown phrase to nothing — refuse both
@@ -86,7 +86,7 @@ function saveProgram(p, file) {
     program: { name: p.name, bpm: p.bpm, offset: p.offset, speedScale: p.speedScale, level: p.level, start: p.start, autoSteer: p.autoSteer,
       notes: p.notes || '', credit: p.credit || '', musicName: p.musicName, musicDuration: p.musicDuration, hits: p.hits || [],
       elements: p.elements.map((e) => ({ libId: e.libId, mirror: e.mirror, beats: e.beats, radiusScale: e.radiusScale, aim: e.aim,
-        gapBefore: e.gapBefore, note: e.note, chst: e.chst, arms: e.arms, distScale: e.distScale })) } }; })()`);
+        gapBefore: e.gapBefore, note: e.note, chst: e.chst, arms: e.arms, distScale: e.distScale, route: e.route })) } }; })()`);
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
@@ -134,11 +134,13 @@ function report(p) {
                      edgeSeconds: +j.edgeSeconds.toFixed(2), boardsAtTakeoff: j.boardsAtTakeoff == null ? null : +j.boardsAtTakeoff.toFixed(1), boardsAtLanding: j.boardsAtLanding == null ? null : +j.boardsAtLanding.toFixed(1),
                      runway: j.runway == null ? null : +j.runway.toFixed(1), speed: +j.speed.toFixed(1), connectorSpeed: j.connSpeed == null ? null : +j.connSpeed.toFixed(1), speedRatio: j.speedRatio == null ? null : +j.speedRatio.toFixed(2),
                      fatigue: +j.fatigue.toFixed(2), late: j.late, hardest: j.hardest, beatsAfterTurn: j.beatsAfterTurn == null ? null : +j.beatsAfterTurn.toFixed(1), heldBefore: j.heldBefore, steerInside: +j.steerInside.toFixed(0),
-                     runIn: +j.runIn.toFixed(2), recovery: +j.recovery.toFixed(2), sinceJump: j.sinceJump == null ? null : +j.sinceJump.toFixed(1) })),
+                     runIn: +j.runIn.toFixed(2), recovery: +j.recovery.toFixed(2), sinceJump: j.sinceJump == null ? null : +j.sinceJump.toFixed(1),
+                     powerRunIn: +j.powerRunIn.toFixed(2), takeoffSpeed: j.takeoffSpeed == null ? null : +j.takeoffSpeed.toFixed(1), airMetres: j.airMetres == null ? null : +j.airMetres.toFixed(1) })),
                    spinDetail: q.spins.map((s) => ({ idx: s.idx, libId: s.libId, count: s.count, fromCentre: +s.fromCentre.toFixed(2), revs: Object.fromEntries(Object.entries(s.revs).map(([k, v]) => [k, +v.toFixed(2)])),
-                     revPerSec: +s.revPerSec.toFixed(2), entrySpeed: +s.entrySpeed.toFixed(1), entry: s.entry, heldBefore: s.heldBefore, setup: +s.setup.toFixed(2), steerInside: +s.steerInside.toFixed(0) })),
+                     revPerSec: +s.revPerSec.toFixed(2), entrySpeed: +s.entrySpeed.toFixed(1), entry: s.entry, heldBefore: s.heldBefore, setup: +s.setup.toFixed(2), powerRunIn: +s.powerRunIn.toFixed(2), steerInside: +s.steerInside.toFixed(0) })),
                    heldShapes: q.heldShapes.map((h) => '#' + h.idx + ' ' + h.libId + ' ' + h.seconds.toFixed(1) + 's' + (h.ok ? '' : ' !')),
                    hardConnectors: q.hardConnectors.map((h) => '#' + h.idx + ' ' + h.libId + ' d' + h.diff),
+                   routes: q.routes.map((r) => '#' + r.idx + ' ' + r.libId + ' ' + r.want + ' -> ' + r.got.toFixed(0) + '°' + (r.ok ? '' : ' !')),
                    fatigueAtJumps: q.fatigueAtJumps.map((v) => +v.toFixed(2)),
                    steeredInsideElements: q.steeredInsideElements.map((x) => '#' + x.idx + ' ' + x.libId + ' ' + x.degrees.toFixed(0) + '°'),
                    speedStep: q.speedStep.map((x) => '#' + x.idx + ' ' + x.libId + ' ' + x.from.toFixed(1) + '>' + x.to.toFixed(1)),

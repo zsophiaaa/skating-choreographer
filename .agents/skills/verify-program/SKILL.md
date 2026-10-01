@@ -58,6 +58,10 @@ gapBefore, note, chst, arms, distScale`; `distScale` is clamped to 0.5–1.5).
 | `jump.edge` | ≥ 0.8 s (`jumpEdgeSecondsMin`) | unsafe | time on the takeoff code before the first air sample, counting back through the element before |
 | `spin.revPerSec` | 1.2–3.0 (`spinRevPerSec`) | unsafe | `lib.rev` over the spin phases' seconds (6 beats of scratch spin = 3.8) |
 | `jump.runIn` | ≥ 1.6 s (`jumpRunInSecondsMin`) | craft | plain skating in front of the takeoff turn — a jump is not entered out of a corridor of turns |
+| `jump.power` | ≥ 1.5 s (`crossoverSecondsMin`) | craft | speed-builder material (crossovers, strokes, rolls) in the approach — pushing, not just edges |
+| `jump.size` | ≥ 2 m (`jumpAirMetresMin`) | craft | metres covered in the air; a readout of the speed taken into the takeoff |
+| `spin.power` | ≥ 1.5 s (`crossoverSecondsMin`) | craft | crossovers into the spin entry |
+| `route.follow` | ≤ 25° (`routeToleranceDeg`) | craft | an element carrying `route` travelled the way the skater asked |
 | `jump.recovery` | ≥ 1.0 s (`jumpRecoverySecondsMin`) | craft | plain skating after the landing (after the whole combination) before the next turn or shape |
 | `jump.spacing` | ≥ 5 s (`jumpGapSecondsMin`) | craft | between one jump element landing and the next taking off |
 | `spin.setup` | ≥ 1.5 s (`spinSetupSecondsMin`) | craft | quiet skating into the entry edge, counting the spin's own arc; a held shape straight into a spin reads 0 |

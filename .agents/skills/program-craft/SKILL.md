@@ -77,10 +77,45 @@ between the elements and cramped at them is the wrong way round.
     material stays at or below `PLACE.connectorDiffMax` (library difficulty 4)
     — `connector.difficulty`. A hard turn used as glue is risk for nothing.
 
-Those five numbers are per-level: a level's `rules` block in `js/engine.js`
+12. **Power comes from pushing, and a jump is as big as the speed it leaves
+    with.** At least `PLACE.crossoverSecondsMin` (1.5 s) of *speed-builder*
+    material — crossovers, strokes, swing rolls, power pulls — in the approach
+    to every jump and every spin (`jump.power`, `spin.power`). Plain edges
+    carry speed; only pushing makes it. The engine caps a jump's travel at
+    `PLACE.jumpSpeedRatioMax` × the speed it was approached at, so the air
+    distance (`jump.size`, ≥ `PLACE.jumpAirMetresMin`) is a direct readout of
+    the run-in: in one build, giving the Lutz 3.3 s of back crossovers instead
+    of a cross roll took it from 4.9 to 6.6 m/s at the takeoff and from 1.5 m
+    to 2.1 m of air. **A spin wants the same**: crossovers into the entry edge,
+    slowed over the last second or two (`spin.entry`), not a held shape.
+
+Those numbers are per-level: a level's `rules` block in `js/engine.js`
 overrides any of them (`jumpRunInSecondsMin`, `jumpRecoverySecondsMin`,
 `jumpGapSecondsMin`, `spinSetupSecondsMin`, `heldSecondsMin`,
 `connectorDiffMax`), so a beginner can be given more room, not less.
+
+## 2b. The skater's own outline
+
+A skater often knows the shape they want on the ice before they know the
+steps: *"go left first, stop on the music change, then the preparation goes
+right, and the spiral runs on the diagonal."* That is a real constraint and
+it is worth more than any pattern an optimiser invents, because it is the
+one they will picture at the rink.
+
+Write it into the chain: any element may carry **`route`** in the save
+format — `'left'` (−x), `'right'` (+x), `'far'` (+y), `'near'` (−y, the
+judges' side), `'diagonal'` (any 45°), or a heading in degrees. The steer
+carries a penalty for an element whose net travel is more than
+`PLACE.routeToleranceDeg` (25°) off what was asked, and `route.follow`
+reports the worst offender, so the outline survives steering instead of
+being argued with. Route the *phrases* (the opening run, the preparation,
+the spiral), not every element — over-constrain it and the jumps cannot
+reach their corners.
+
+Give the skater the result in their own words ("the opening runs to the left
+end, the stop is at x = −15, the preparation comes back right"), and say
+which way the rink's left is on the diagram, because "left" depends on who
+is facing where.
 
 ## 3. Connecting material
 
@@ -120,6 +155,12 @@ overrides any of them (`jumpRunInSecondsMin`, `jumpRecoverySecondsMin`,
    | `step-fio.R` 2 → `three-fo` 3 → `power-pull-b` 6 → Lutz | 11+2 | — | out of the knee slide (C3) |
    | `crossroll-b.R` 4 → `xover-b.R` 6 → `mohawk-bo` 3 → `stroke-f.R` 4 → `three-fo` 3 | 19+2 | CW turn-round | rotation repair between two LBI jumps |
    A jump's landing edge adds ~+25–30° of curl of its own.
+   **No back mohawk?** Many skaters own forward mohawks but not back ones.
+   `mohawk-bo` (LBO>RFO) is then `three-bo` 3 (LBO>LFI) → `step-fio` 2
+   (LFI>RFO) — two beats longer, taken from the builder beside it; a back
+   three → `power-pull-f` (LFI>LFO) keeps the speed builder when the next
+   element wants the same foot. Note `step-*` directly before a spin counts as
+   its entry turn, not its set-up edge (`spin.setup`) — end on a plain edge.
 8b. **Play to the skater's strengths.** Between the elements, choose the
    version of a shape they are *good* at over the version that is nominally
    harder: a forward outside spiral held four seconds beats a forward inside

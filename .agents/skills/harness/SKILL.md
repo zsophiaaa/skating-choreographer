@@ -38,6 +38,11 @@ can then fail the length check. **Building without music?** Set
 `verify` reports `music: null`. A program file's own `bpm`/`offset` win over
 the envelope's.
 
+An element may carry **`route`** (`'left' | 'right' | 'far' | 'near' |
+'diagonal' | degrees`) — the direction the skater wants to travel over it.
+The steer honours it and `verify` reports `placement.routes`; see
+**program-craft** §2b.
+
 A program file is the app's save format `{ format, version, program: {…} }`
 with `program.elements[] = { libId, mirror, beats, radiusScale, aim, gapBefore,
 note, chst, arms, distScale }` — those fields and no others: the loader
