@@ -147,8 +147,11 @@ function buildPath(program) {
     // off a 3.5 m/s three-turn covers ~4 m, not 6. Skating into a jump slowly
     // therefore makes a small jump — which is true on the ice as well.
     if (R.lib.cat === 'jumps' && samples.length) {
-      let carried = 0; for (let k = samples.length - 1, n = Math.ceil(1.5 / DT); k >= 0 && n > 0; k--, n--) carried = Math.max(carried, samples[k].speed);
-      const approach = carried * PLACE.jumpSpeedRatioMax * dur;
+      // A jump leaves at the speed of the edge it rides into the takeoff — you
+      // cannot pick a Lutz faster than the edge under you. (An earlier version
+      // took the peak of the last 1.5 s, which let a deliberately short, slow
+      // takeoff edge still produce a big jump on paper. A coach caught it.)
+      const approach = samples[samples.length - 1].speed * PLACE.jumpSpeedRatioMax * dur;
       dist = Math.min(dist, Math.max(dist * 0.4, approach));
     }
     const speed = dist / dur;
@@ -772,6 +775,7 @@ function analyzeStepSequence(program, path) {
 const PLACE = {
   spinMaxFromCentre: 7,     // metres
   jumpZoneRadius: 9,        // metres, from centre or from a corner anchor
+  zoneToleranceM: 9,        // metres an element may sit from the `zone` it was given
   corners: [[-19, -6.5], [-19, 6.5], [19, -6.5], [19, 6.5]],
   speedBuilders: ['xover-f', 'xover-b', 'stroke-f', 'stroke-b', 'power-pull-f', 'power-pull-b',
                   'progressive-f', 'swing-roll-f', 'swing-roll-b', 'crossroll-f', 'crossroll-b', 'run-of-three'],
@@ -850,6 +854,23 @@ const PLACE = {
 
 const ROUTE_TARGETS = { right: [0], left: [180], far: [90], near: [-90], diagonal: [45, 135, -45, -135],
   ne: [45], nw: [135], sw: [-135], se: [-45] };
+/** where on the ice an element should happen, as the skater names it looking at a
+ *  diagram from above: +x to the right, +y to the top. `zone: 'ne'` on a jump puts
+ *  it in the top-right corner, `zone: 'w'` starts a step sequence at the left end.
+ *  Corners are the same anchors `jump.zone` already scores against. */
+const ZONE_ANCHORS = { ne: [19, 6.5], nw: [-19, 6.5], se: [19, -6.5], sw: [-19, -6.5],
+  centre: [0, 0], e: [20, 0], w: [-20, 0], n: [0, 11], s: [0, -11] };
+/** how far (metres) a point is from the zone an element asked for.
+ *  A corner is a point, but an END or a SIDE is a band: "start the sequence from
+ *  one end" does not care how wide across the rink it starts, so e/w measure
+ *  along the length only and n/s across the width only. */
+function zoneDistance(zone, x, y) {
+  const k = String(zone).toLowerCase(), a = ZONE_ANCHORS[k];
+  if (!a) return 0;
+  if (k === 'e' || k === 'w') return Math.abs(x - a[0]);
+  if (k === 'n' || k === 's') return Math.abs(y - a[1]);
+  return Math.hypot(x - a[0], y - a[1]);
+}
 /** how far (degrees) a travel heading is from what `route` asked for */
 function routeDeviation(route, headingDeg) {
   const t = typeof route === 'number' ? [route] : ROUTE_TARGETS[String(route).toLowerCase()];
@@ -897,7 +918,10 @@ function analyzePlacement(program, path) {
   // seconds of plain skating leading into element i (one turn — the takeoff
   // turn or the spin entry — may sit between the run and the element)
   const runInto = (i, allowTurn) => { let j = i - 1, t = 0;
-    if (allowTurn && segs[j] && (segs[j].lib.cat === 'turns' || segs[j].lib.id.startsWith('step-'))) j--;
+    // the transition onto the takeoff or entry edge may take up to two elements
+    // — a turn and a step (back crossovers, back three, step forward, spin is
+    // the standard camel entry for a skater without back mohawks)
+    for (let k = 0; allowTurn && k < 2 && segs[j] && (segs[j].lib.cat === 'turns' || segs[j].lib.id.startsWith('step-')); k++) j--;
     while (plain(segs[j])) { t += segs[j].dur; j--; }
     return t; };
   // seconds of plain skating out of element i (through the rest of a combination)
@@ -983,10 +1007,8 @@ function analyzePlacement(program, path) {
     }
     // speed into the jump against the two connectors before it
     const conn = []; for (let k = i - 1; k >= 0 && conn.length < 2; k--) { const c = segs[k]; if (!['jumps', 'spins', 'stops'].includes(c.lib.cat) && c.dist > 0) conn.push(c.speed); }
-    // the speed a jump can use is the FASTEST thing it carries out of, not the
-    // average: a deliberate quiet edge on the takeoff edge does not cost speed
-    // (buildPath caps the jump's travel the same way)
-    const connSpeed = conn.length ? Math.max(...conn) : null;
+    // the check matches buildPath: the edge it rides in on is what it gets
+    const connSpeed = conn.length ? conn[0] : null;
     const speedRatio = connSpeed ? s.speed / connSpeed : null;
     // ordering: fatigue at takeoff, late placement of the hardest jump, and
     // beats between the last turn of the sequence and this takeoff
@@ -1016,6 +1038,19 @@ function analyzePlacement(program, path) {
       routes.push(Object.assign(tag(segs[i]), { want, got, dev, span, through: segs[j].lib.id, ok: dev <= PLACE.routeToleranceDeg }));
     }
     i = j;
+  }
+  // the skater's own placement: `zone` on an element says WHERE on the ice it
+  // should happen ('ne' = the top-right corner on a diagram, 'w' = the left end).
+  // Measured at the element's start, which is where a jump takes off and where a
+  // step sequence begins.
+  const zones = [];
+  for (const s of segs) {
+    const want = s.inst && s.inst.zone;
+    if (!want || !ZONE_ANCHORS[String(want).toLowerCase()]) continue;
+    const m = sampleAt(path, s.t0);
+    const d = zoneDistance(want, m.x, m.y);
+    zones.push(Object.assign(tag(s), { want, metres: +d.toFixed(2), at: [+m.x.toFixed(1), +m.y.toFixed(1)],
+      ok: d <= PLACE.zoneToleranceM }));
   }
   // held shapes: long enough to read, and what they run into
   const heldShapes = segs.map((s, i) => ({ s, i })).filter(({ s }) => s.lib.cat === 'field' && s.dist > 0)
@@ -1129,7 +1164,7 @@ function analyzePlacement(program, path) {
     distinct, oneOffs, memorable: distinct <= PLACE.memorableDistinct,
     offIce: sm.filter((q) => !insideRink(q.x, q.y)).length * DT,
     startFromCentre: s0 ? Math.hypot(s0.x, s0.y) : 0, finishFromCentre: s1 ? Math.hypot(s1.x, s1.y) : 0,
-    glide, steeredInsideElements, speedStep, afterStop, heldBefore, heldShapes, hardConnectors, routes,
+    glide, steeredInsideElements, speedStep, afterStop, heldBefore, heldShapes, hardConnectors, routes, zones,
     fatigueAtJumps: jumps.map((j) => j.fatigue),
   };
 }
@@ -1301,6 +1336,14 @@ async function steerProgramAsync(program, opts = {}) {
     const sideShort = Math.max(0, PLACE.sideShare - topSide / sm.length) + Math.max(0, PLACE.sideShare - botSide / sm.length);
     const sidePen = sideShort > 0 ? 150 + sideShort * 10000 : 0;
     const cornerPen = h.reduce((t, v) => t + (v * DT < PLACE.cornerSeconds ? 60 + (PLACE.cornerSeconds - v * DT) * 100 : 0), 0);
+    let zonePen = 0;
+    for (const sg of path.segs) {
+      const want = sg.inst && sg.inst.zone;
+      if (!want || !ZONE_ANCHORS[String(want).toLowerCase()]) continue;
+      const m = sampleAt(path, sg.t0);
+      const d = zoneDistance(want, m.x, m.y);
+      if (d > PLACE.zoneToleranceM) zonePen += 40 + (d - PLACE.zoneToleranceM) * 8;
+    }
     let routePen = 0;
     for (let i = 0; i < path.segs.length; i++) {
       const want = path.segs[i].inst && path.segs[i].inst.route;
@@ -1325,7 +1368,7 @@ async function steerProgramAsync(program, opts = {}) {
     const [rLo, rHi] = PLACE.rotationBand, ccwPct = (ccw / ((ccw + cw) || 1)) * 100;
     const rotPen = Math.max(0, rLo - ccwPct, ccwPct - rHi) * 60;
     return off * 60 - cells.size * 4 - h.reduce((t, v) => t + Math.min(v, 180), 0) * 0.8
-      + imb * imb * 4 + rotPen + Math.max(0, endD - 3.5) ** 2 * 7 + sp * 30 + jp * 260 + safetyPen + chstPen + endPen + sidePen + cornerPen + lobePen + routePen;
+      + imb * imb * 4 + rotPen + Math.max(0, endD - 3.5) ** 2 * 7 + sp * 30 + jp * 260 + safetyPen + chstPen + endPen + sidePen + cornerPen + lobePen + routePen + zonePen;
   };
 
   const greedy = async (label, n, fn = cost, g = grid) => {
@@ -1580,6 +1623,7 @@ function placementScore(q, a, path) {
   const sides = q.sides ? miss(PLACE.sideShare - q.sides.top, 300, 0.05, 20) + miss(PLACE.sideShare - q.sides.bottom, 300, 0.05, 20) : 0;
   const corners = q.cornerSeconds ? q.cornerSeconds.reduce((t, v) => t + miss(PLACE.cornerSeconds - v, 10, 1, 1), 0) : 0;
   const routes = q.routes ? q.routes.reduce((t, r) => t + (r.ok ? 0 : 10 + (r.dev - PLACE.routeToleranceDeg) * 0.4), 0) : 0;
+  const zones = q.zones ? q.zones.reduce((t, z) => t + (z.ok ? 0 : 10 + (z.metres - PLACE.zoneToleranceM) * 1.2), 0) : 0;
   const lobes = q.lobes ? q.lobes.reduce((t, l) => { const L = PLACE.lobe, deg = Math.abs(l.turn);
     return t + (l.ok ? 0 : 10 + Math.max(0, L.minTurn - deg, deg - L.maxTurn) * 0.5 + Math.max(0, L.minRadius - l.radius, l.radius - L.maxRadius) * 2); }, 0) : 0;
   const cover = q.coveragePct != null ? Math.max(0, PLACE.coverageTarget - q.coveragePct) * 0.5 - Math.min(6, Math.max(0, q.coveragePct - PLACE.coverageTarget)) * 0.3 : 0;   // soft: no step
@@ -1592,7 +1636,7 @@ function placementScore(q, a, path) {
     + miss((j.steerInside || 0) - PLACE.steerInsideMax, 0.5), 0)
     + q.spins.reduce((t, sp) => t + miss((sp.steerInside || 0) - PLACE.steerInsideMax, 0.5), 0)
     + (q.steeredInsideElements || []).reduce((t, e) => t + miss((e.degrees || 0) - PLACE.steerInsideMax, 0.5), 0);
-  return q.offIce * 100 + ends + chst + sides + corners + lobes + cover + safety + routes
+  return q.offIce * 100 + ends + chst + sides + corners + lobes + cover + safety + routes + zones
     + q.spins.reduce((t, sp) => t + miss(sp.fromCentre - PLACE.spinMaxFromCentre, 5, 2, 0.3), 0)
     + q.jumps.filter((j) => !j.ok).length * 15
     + q.jumps.filter((j) => j.awkward || !j.builtSpeed).length * 5
@@ -1749,11 +1793,20 @@ function placementRules(program, path, analysis, q, sq) {
     row('jump.edge', 'unsafe', w ? w.v : null, PLACE.jumpEdgeSecondsMin, 'min', { unit: 's', at: w && w.it, n: q.jumps.filter((j) => j.edgeSeconds < PLACE.jumpEdgeSecondsMin).length,
       lever: 'a longer edge on the takeoff code before the jump (the exit of the element before must be the takeoff edge)',
       msg: w && w.v < PLACE.jumpEdgeSecondsMin ? `${named(w.it)} takes off after only ${w.v.toFixed(2)} s on its takeoff edge — hold it ${PLACE.jumpEdgeSecondsMin} s.` : '' }); }
-  { const late = q.jumps.filter((j) => j.hardest && j.late);
-    const w = worst(late, (j) => j.fatigue, 'max');
+  // A jump that is the hardest in the program OR in its last fifth is the one
+  // fatigue can cost. Filtering on hardest AND late hid the worst number in one
+  // build: a Lutz at 96% of peak fatigue at 78% through the program went
+  // unflagged because it was not late, while a 94% one after it was reported.
+  { const risky = q.jumps.filter((j) => j.hardest || j.late);
+    const w = worst(risky, (j) => j.fatigue, 'max');
     row('jump.fatigue', 'soft', w ? w.v : 0, PLACE.fatigueMax, 'max', { unit: '', at: w && w.it, n: w && w.v > PLACE.fatigueMax ? 1 : 0, items: q.jumps.map((j) => ({ idx: j.idx, libId: j.libId, fatigue: +j.fatigue.toFixed(2) })),
       lever: 'move the hardest jump earlier, or a quieter run into it',
-      msg: w && w.v > PLACE.fatigueMax ? `${named(w.it)} is the hardest jump and sits in the last ${Math.round(PLACE.lateJumpShare * 100)}% of the program at ${Math.round(w.v * 100)}% of peak fatigue.` : '' }); }
+      msg: w && w.v > PLACE.fatigueMax ? `${named(w.it)} is ${w.it.hardest ? 'the hardest jump in the program' : `in the last ${Math.round(PLACE.lateJumpShare * 100)}%`} and takes off at ${Math.round(w.v * 100)}% of peak fatigue.` : '' }); }
+  { const bad = (q.zones || []).filter((z) => !z.ok);
+    const w = worst(q.zones || [], (z) => z.metres, 'max');
+    row('zone.place', 'craft', w ? w.v : 0, PLACE.zoneToleranceM, 'max', { unit: 'm', at: bad[0] || (w && w.it), n: bad.length,
+      items: q.zones || [], lever: 'the aims before it (the steer honours zone); or move it to a zone it can reach',
+      msg: bad.length ? `${named(bad[0])} was asked for the ${bad[0].want} zone and happens ${bad[0].metres} m from it.` : '' }); }
   { const w = worst(q.jumps.filter((j) => j.beatsAfterTurn != null), (j) => j.beatsAfterTurn, 'min');
     row('jump.afterTurn', 'craft', w ? w.v : null, PLACE.chstToJumpBeats, 'min', { unit: 'beats', at: w && w.it, n: w && w.v < PLACE.chstToJumpBeats ? 1 : 0,
       lever: 'end the sequence on an edge of two beats before the takeoff',

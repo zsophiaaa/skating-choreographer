@@ -129,6 +129,9 @@ the harness `verify`/`score` measure every one. The skater's profile can overrid
 | No dead ice | every glide (`gapBefore`) ≤ 1.5 s |
 | Start and finish near centre | ≤ 7 m |
 | Arms on every element | every element carries its own `arms` track; ≥ 34% of the step sequence has authored arm movement |
+| The skater's own outline | `route` on an element (left / right / near / far / diagonal) — the phrase travels that way, within 25° |
+| The skater's own placement | `zone` on an element (`ne`/`nw`/`se`/`sw` corners as seen from above, `e`/`w` ends, `centre`) — it happens within 9 m of that anchor |
+| Standard entries | back crossovers into every jump and spin, the wind-up turning *against* the element it feeds, and a long fast edge last (`program-craft` §8) |
 | Level rules | Aspire 4 caps, the required camel→sit, one ChSt (`checkAspire`) |
 
 ## How it was built, and how it was tested

@@ -14,7 +14,7 @@ description: The failure modes specific to working on this repo through the brow
   the music, all of it. `loadPreset` the program back and re-upload the mp3.
 - **Loading music resets `bpm` and `offset`** from detection. Re-set both on
   the program after every upload to the active profile's values (for the
-  current profile, La La Land: `p.bpm=126; $('#bpmInput').value=126;
+  current profile: `p.bpm=126; $('#bpmInput').value=126;
   p.offset=0.453; rebuild(false)`).
 - **The mp3 must live in the scratchpad** for `file_upload`; `~/x.mp3` is
   refused. Copy it there first.
@@ -29,7 +29,7 @@ description: The failure modes specific to working on this repo through the brow
 - **Tool output truncates at ~2–3 KB.** Pull big data (element lists, notes) in
   chunks via `window.__c=[…]` then read the pieces.
 - **A heavy `javascript_tool` call can return "Internal error" after the work
-  completed.** Building all 15,625 (5⁶) remix combinations of the La La Land
+  completed.** Building all 15,625 (5⁶) remix combinations of one
   deck did this. The page state
   is fine — re-read it with a light call. Keep optimiser passes ≤ 3.
 - **A hidden tab throttles `setTimeout` to ~1/s, then ~1/min after five
@@ -79,6 +79,19 @@ description: The failure modes specific to working on this repo through the brow
   the wrong bracket and deleted two other presets.** It sat in the repo for two
   commits because nobody counted the cards. Splice by **bracket counting** from
   `chain: [`, and after every presets.js edit assert `PRESETS.length`.
+- **An arm keyframe written as a pair silently loses its phrase.** The save
+  file wants objects: `{t, pose}` for a shape and
+  `{t, phrase, until, cycles}` for a moving phrase. A `[t, 'name']` pair is
+  read as a *pose*, so `[0.2, 'rise_fall']` passes `verify` with no error and
+  simply does not appear in `arms.phrases` — the hands stand still on an
+  element that was supposed to be the moving one. Check `arms.phrases` in the
+  report names every phrase you wrote, not just that the element has a track.
+  An unknown *pose* name does fail loudly ("unknown arm shapes"), which is why
+  the pair form is the dangerous one.
+- **A build script that splices by index shifts every index after the splice.**
+  Locate elements by `libId` (and `mirror`) after any splice, never by the
+  position you printed before it. A shifted index once put a spin's beats on an
+  Ina Bauer and the program came out five seconds long.
 - `git checkout <file>` is blocked as a discard; recover with
   `git show <rev>:<path> > scratch` and rebuild from that.
 - Python `re.sub` with `→` in the *replacement* string raises "bad

@@ -21,6 +21,7 @@ const presets = specs.map((spec) => {
     if (e.radiusScale != null && e.radiusScale !== 1) o.radiusScale = e.radiusScale;
     if (e.distScale != null && e.distScale !== 1) o.distScale = e.distScale;
     if (e.route) o.route = e.route;
+    if (e.zone) o.zone = e.zone;
     if (e.chst) o.chst = true;
     if (e.arms) o.arms = e.arms;
     if (e.note) o.note = e.note;

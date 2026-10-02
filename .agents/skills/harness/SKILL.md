@@ -51,6 +51,29 @@ name, so a typo cannot silently become "no arms". `distScale` stretches an
 element's travel (clamped 0.5–1.5). Write one by hand or with a short
 Node/Python script — the chain is the design; the harness does the rest.
 
+## Asking for a route and a zone
+
+Two optional per-element fields say what the skater wants of the *pattern*, and
+both are honoured by the steer and reported by `verify`:
+
+- **`route`** — which way this phrase should travel: `left`, `right`, `near`
+  (toward the judges), `far`, `diagonal`, or a compass corner. Consecutive
+  elements sharing a value are measured as one phrase, by net displacement.
+  Reported as `placement.routes`, scored as `route.follow`
+  (`PLACE.routeToleranceDeg`).
+- **`zone`** — WHERE on the ice the element should happen, measured at its
+  start: `ne`/`nw`/`se`/`sw` for the corners as the skater sees them on a
+  diagram from above (+x right, +y top), `e`/`w` for the ends, `n`/`s` for the
+  sides, `centre`. Reported as `placement.zones`, scored as `zone.place`
+  (`PLACE.zoneToleranceM`). Use it for jumps the skater wants in particular
+  corners and for the end a step sequence should start from.
+
+Both are constraints: each one costs the steer somewhere else, so put them on
+the handful of elements whose position is actually a decision, not on everything.
+`route` and `zone` survive the save file, `json2preset` and the browser export —
+if you add another such field, add it to all three or the published program will
+not match the file (that has happened twice).
+
 ## The loop
 
 1. **Read the music**: `envelope` (needs `music/<track>-envelope.json`, exported
@@ -112,7 +135,7 @@ are hints for the ear, not a score.
   `--out` files and choose. `verify` prints raw margins (`thirds` to 0.1,
   spins to 0.01, `lengthFrac` to 0.001) — 18.05% is not covered. The pipeline ends with a
   **polish** pass that minimises that score directly on a fine grid; it is
-  what turns "an end at 17%" into 19%. *Example from the La La Land
+  what turns "an end at 17%" into 19%. *Worked example from one 100-second free skate
   experiments: since these landed, the two round-2 chains that took 19 and
   31 runs reach 0 misses in **one** run (`--starts 0 --headings 180`).*
 - `envelope --bucket 0.5` is the resolution to anchor by; 2 s is for the
@@ -147,7 +170,7 @@ fetch('http://localhost:8778/x.json',    {method:'POST', body: JSON.stringify(da
 
 Export the music envelope once per track (after `file_upload` of the mp3 into
 `#fileAudio`, and re-setting bpm/offset to the profile's — loading music
-resets them). Example for the current track (La La Land, 126 bpm, offset
+resets them). Example for the current track (a 126 bpm track, offset
 0.453 s); substitute your file name, bpm and offset:
 
 ```js

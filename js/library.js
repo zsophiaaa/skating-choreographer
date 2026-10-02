@@ -218,6 +218,19 @@ E({ id: 'step-bo', name: 'Backward Step-Over (outside)', cat: 'edges', diff: 2, 
   ext: 'The landing leg stays extended until the moment you step.',
   tags: ['step', 'connector', 'backward'] });
 
+// Stepping forward out of a backward crossover run onto the other foot's forward
+// outside edge. This is how a skater comes out of a wind-up into a Salchow's
+// three-turn, into a camel's entry edge, or into any forward element; without it
+// a chain can only leave back crossovers through a turn, which is not what is
+// skated. Mirrored it is LBO > RFO.
+E({ id: 'step-bf', name: 'Step Forward (out of back crossovers)', cat: 'edges', diff: 2, entry: 'RBO', exit: 'LFO',
+  beats: 2, dist: 5,
+  phases: [{ k: 'arc', f: 0.45, r: 9, code: 'RBO' }, { k: 'arc', f: 0.55, r: 11, code: 'LFO' }],
+  poses: [{ t: 0, pose: 'glide' }, { t: 0.45, pose: 'stroke_push' }, { t: 1, pose: 'glide' }],
+  tip: 'Steps forward from a back outside edge onto the other foot\'s forward outside edge — the standard way out of a back crossover wind-up and into a jump entry turn or a spin entry edge.',
+  ext: 'Keep the free hip and shoulder where the crossovers left them; the step is a change of foot, not a change of direction of the body.',
+  tags: ['step', 'connector', 'entry', 'windup'] });
+
 E({ id: 'run-of-three', name: 'Perimeter Power Stroking', cat: 'edges', diff: 2, entry: 'LFO', exit: 'LFO',
   beats: 16, dist: 34, cost: 4,
   phases: [{ k: 'arc', f: 0.25, r: 16, code: 'LFO' }, { k: 'arc', f: 0.25, r: 9, code: 'RFI', both: true },
@@ -853,8 +866,8 @@ SPIN({ id: 'spin-flying-sit', name: 'Flying Sit Spin', diff: 5, entry: 'LFO', ex
 
 SPIN({ id: 'spin-camel-sit', name: 'Camel → Sit Combination (Aspire 4 required)', diff: 4, entry: 'LFO', exit: 'RBI', rev: 10, cost: 5, beats: 12,
   phases: [{ k: 'arc', f: 0.12, r: 5, code: 'LFO' }, { k: 'spin', f: 0.88, rev: 10, travel: 1.2, code: 'RBI' }],
-  poses: [{ t: 0, pose: 'glide_deep' }, { t: 0.12, pose: 'arabesque' }, { t: 0.22, pose: 'spin_camel' }, { t: 0.5, pose: 'spin_camel' },
-          { t: 0.6, pose: 'spin_sit' }, { t: 0.84, pose: 'spin_sit' }, { t: 0.92, pose: 'spin_scratch' }, { t: 1, pose: 'presentation' }],
+  poses: [{ t: 0, pose: 'glide_deep' }, { t: 0.12, pose: 'arabesque' }, { t: 0.22, pose: 'spin_camel' }, { t: 0.48, pose: 'spin_camel' },
+          { t: 0.56, pose: 'spin_sit' }, { t: 0.82, pose: 'spin_sit' }, { t: 0.92, pose: 'spin_scratch' }, { t: 1, pose: 'presentation' }],
   tip: 'The Aspire 4 required spin: forward camel into a forward sit, no flying entry. Minimum 3 revolutions in each position — count them, do not guess.',
   ext: 'Rise through the upright before you drop into the sit; the change of position is the element, not the two shapes on their own.',
   tags: ['spin', 'combination', 'camel', 'sit', 'aspire', 'required'] });

@@ -16,7 +16,7 @@ table says what it was computed at. The current profile
 (the one named in `.agents/profiles/ACTIVE`; the worked examples below are from an Aspire 4 build at speedScale 0.8, 126 bpm); regenerate
 any such table for another skater or track with
 `node tools/harness.js lib --speedScale X --bpm Y`. Passages marked
-*"Example from the La La Land build"* are that one program, not a rule.
+*"Worked example from one 100-second free skate"* are that one program, not a rule.
 
 ## 1. Placement on the ice
 
@@ -89,6 +89,20 @@ between the elements and cramped at them is the wrong way round.
     to 2.1 m of air. **A spin wants the same**: crossovers into the entry edge,
     slowed over the last second or two (`spin.entry`), not a held shape.
 
+12b. **A jump cannot leave faster than the edge it rides in on.** The speed the
+    engine gives a takeoff is the speed of the element immediately before it —
+    not the fastest thing in the approach. So never buy a jump's *placement* by
+    shortening its takeoff edge: a `distScale` on the last connector, or a
+    2-beat edge where 3 was needed, throws away every crossover in front of it.
+    In one build a Lutz had 3.8 s of back crossovers and then a takeoff edge
+    shortened to half its length to pull the landing toward centre; the honest
+    takeoff was 4.4 m/s and 1.4 m of air — the smallest jump in the program, on
+    the loudest bar of the music. Making the *takeoff edge itself* the long,
+    fast one (a full cross roll ridden for three counts, ~5 m/s) gave 6.6 m/s
+    and 2.1 m with no extra beats. Re-aim the approach to move a jump; never
+    shrink the last edge. The edge also has to be long enough to be seen
+    (`jump.edge`), which is the same fix pointing the same way.
+
 Those numbers are per-level: a level's `rules` block in `js/engine.js`
 overrides any of them (`jumpRunInSecondsMin`, `jumpRecoverySecondsMin`,
 `jumpGapSecondsMin`, `spinSetupSecondsMin`, `heldSecondsMin`,
@@ -133,42 +147,61 @@ is facing where.
    skater with no speed. *For the current profile: crossovers, not
    progressives; "not too many strokes"; crossovers at ~25–45% of the
    connecting beats has been accepted.*
-8. **Comfortable jump entries.** Nothing awkward immediately before a takeoff:
-   no d5 turn right before a jump, and a speed builder in the two elements
-   before it (`awkward`, `builtSpeed` in `analyzePlacement`). Two recipes:
-   - **flip / Salchow:** land → back crossovers → mohawk → forward crossovers →
-     three-turn → jump
-   - **Lutz:** cross roll → back crossovers curving the *other* way → jump
-   The same recipe every time is what makes a program learnable. Recipes by
-   direction and length, because the window between two anchors is fixed by
-   the music. **Counts are at speedScale 0.8 / 126 bpm** (each element at its
-   `minB` rounded up, plus the 2-beat jump); regenerate the minimums with
-   `node tools/harness.js lib --speedScale X --bpm Y` and re-add them for
-   another skater. The "fits" column is from the La La Land build; a window
-   is counted from one jump's start to the next jump's start, so it holds
-   the recipe plus any glide:
-   | recipe | counts | curl | fits (example from the La La Land build) |
-   |---|---|---|---|
-   | land → `crossroll-b.R` 4 → `xover-b.R` 6 → `three-bo` 3 → `power-pull-f` 4 → `three-fo` 3 | 18+2 | CW | the 21-count flip→flip window (C3's flip-2 entry, with 1 of glide) |
-   | land → `xover-b` 6 → `mohawk-bo.R` 3 → `xover-f` 7 → `three-fo` 3 | 19+2 | CCW | flip / Salchow, the full recipe |
-   | land → `crossroll-b.R` 4 → `xover-b.R` 6 → `mohawk-bo` 3 → `crossroll-f` 4 → `three-fo` 3 | 20+2 | CW | the 25-count flip→Salchow window (with ~3 of glide or a longer builder) |
-   | `step-fio.R` 2 → `three-fo` 3 → `power-pull-b` 6 → Lutz | 11+2 | — | out of the knee slide (C3) |
-   | `crossroll-b.R` 4 → `xover-b.R` 6 → `mohawk-bo` 3 → `stroke-f.R` 4 → `three-fo` 3 | 19+2 | CW turn-round | rotation repair between two LBI jumps |
-   A jump's landing edge adds ~+25–30° of curl of its own.
-   **No back mohawk?** Many skaters own forward mohawks but not back ones.
-   `mohawk-bo` (LBO>RFO) is then `three-bo` 3 (LBO>LFI) → `step-fio` 2
-   (LFI>RFO) — two beats longer, taken from the builder beside it; a back
-   three → `power-pull-f` (LFI>LFO) keeps the speed builder when the next
-   element wants the same foot. Note `step-*` directly before a spin counts as
-   its entry turn, not its set-up edge (`spin.setup`) — end on a plain edge.
-8b. **Play to the skater's strengths.** Between the elements, choose the
-   version of a shape they are *good* at over the version that is nominally
-   harder: a forward outside spiral held four seconds beats a forward inside
-   spiral held two; the jump entry they own (for many skaters a mohawk into
-   the flip and Salchow, a back cross roll onto the Lutz edge) beats a clever
-   one. Their profile lists what they own; if it does not say, ask, and write
-   the answer down. Nothing in a program is worth less than a difficult thing
-   done badly on the way to a jump.
+8. **Entries are standard. Use the real ones.** Every jump and spin has a
+   conventional approach that skaters are taught and judges expect to see; a
+   clever substitute is a liability on a jump and reads as a mistake on a spin.
+   For a counter-clockwise skater (mirror all of this for a clockwise one):
+
+   | element | the standard approach | in library terms |
+   |---|---|---|
+   | **Lutz** | back crossovers, then a long back-OUTSIDE edge ridden in a wide arc, reaching back for the pick | `xover-b.R` (clockwise) → `edge-lbo` or `crossroll-b.R` → jump |
+   | **Flip** | back crossovers, then a turn onto the back INSIDE edge — an inside mohawk or a forward three | `xover-b` → `step-bf` → `edge-change-f.R` → `mohawk-fi.R` → jump |
+   | **Salchow** | back crossovers, step forward, forward outside THREE-TURN onto the back inside edge, check, swing the free leg through | `xover-b` → `step-bf` → `three-fo` → jump |
+   | **Loop / toe loop** | straight off the back outside landing edge of the jump before it, or off back crossovers | second jump of a combination, or `xover-b` → `step-bo` |
+   | **Camel / sit / combination spin** | back crossovers as a WIND-UP, turning the *opposite* way to the spin, then step forward onto the forward outside entry edge | `xover-b.R` → `step-bo` → `step-bf` → spin |
+
+   Two things in that table do most of the work. **`step-bf` — stepping forward
+   out of a back crossover run onto the other foot's forward outside edge — is
+   the single most common transition in skating**, and a chain that lacks it
+   can only leave crossovers through a turn, which is not what is skated. And
+   **the wind-up turns the other way**: back crossovers before a counter-clockwise
+   spin go clockwise, because what loads the spin is the body being wound
+   against it. The same is true of the Lutz, whose crossovers curve away from
+   the direction the jump rotates. Getting that backwards gives the skater
+   nothing to unwind.
+
+   Everything else about the approach follows rules 6–12: no d5 turn right
+   before a takeoff, a speed builder in the two elements before it, and the
+   room those rules ask for (`awkward`, `builtSpeed` in `analyzePlacement`).
+   **Use the same recipe each time** — one entry learned and used twice is
+   worth more than two clever ones, and it is what makes a program learnable.
+
+8b. **Where on the ice each element happens, and how to ask for it.** The
+   conventions are not arbitrary and skaters know them:
+   - **Lutzes go in corners, on a diagonal** — the long edge runs into the
+     corner, and putting the two of them in opposite corners uses the ice and
+     keeps them from looking like the same jump twice.
+   - **Flip and Salchow** take a corner or the centre; what they need is the
+     straight run the entry turn sits on.
+   - **Spins happen near the centre** (`spin.centre`), where a panel can see
+     the centring.
+   - **A step sequence starts at one end and travels** — the ISU patterns are
+     circular, midline and diagonal, and all three begin at an end or a corner
+     rather than in the middle. Starting it mid-ice wastes half its length.
+   Say so with **`zone`** on the element: `'ne' | 'nw' | 'se' | 'sw'` for the
+   corners as the skater sees them on a diagram from above (+x right, +y top),
+   `'e' | 'w'` for the ends, `'n' | 's'` for the sides, `'centre'`. The steer
+   pulls the element toward that anchor and `zone.place` reports how far it
+   landed from it (`PLACE.zoneToleranceM`). Use it for the handful of elements
+   whose position the skater actually cares about — it is a constraint, and
+   every one of them costs the steer somewhere else.
+
+8c. **Play to what the skater owns.** The profile outranks this whole section.
+   Prefer the thing they do well held longer over the thing they do barely:
+   a forward outside spiral held four seconds beats a forward inside spiral
+   held two; the jump entry they own beats a clever one. If the profile does
+   not say, ask, and write the answer down. Nothing in a program is worth less
+   than a difficult thing done badly on the way to a jump.
 
 9. **Rotation balance 42–58% CCW** (`PLACE.rotationBand`). Forward crossovers on LFO and backward on
    RBO both turn left; mirror half the runs (`mirror: true`) so the deck does
@@ -192,7 +225,44 @@ is facing where.
     stops in a 1:40 program is plenty; three over-decorates. Where the stops
     go for a given skater and track is in the profile, in counts.
 13. **The melodic opening gets extension and stroking**, not crossovers — a
-    spiral, a reach, long edges. Crossovers there sound like warm-up.
+    spiral, a reach, long edges. Crossovers there sound like warm-up. But
+    *stroking* means strokes: an opening built only of held shapes and choreo
+    moves has nothing in it that pushes, and the skater reaches the first stop
+    or the first jump with no speed and no way to have got any. Count the
+    pushes in the front of the program — at least one speed-builder per eight
+    counts — and remember a standing start is 0 m/s, which no check measures
+    because the opening pose covers no distance. One build opened with a pose,
+    a reach, a 2.9 s one-foot glide and a chassé: sixteen counts, no stroke,
+    and then thirteen counts to find jump speed from a standstill.
+13b. **A held shape must contain the swell, not end at it.** Place a held line
+    so the musical moment it is for falls *inside* it. An Ina Bauer timed to
+    start where the lift starts is over by the time the lift blooms, and the
+    connecting material behind it gets the moment instead; one build had the
+    Bauer at 0:46.7–0:49.5 against a lift at 0:50, and the crossovers after it
+    were what the audience saw on the swell. Check it in `music.heldOrStopped`
+    and by reading `chain`'s timestamps against `envelope`, and fix it by
+    holding the shape *longer* rather than moving it — moving it costs the
+    element on the other side, lengthening it costs only connecting material.
+
+13c. **Do not spend every held shape in the first half.** List the held shapes
+    with their times (`placement.heldShapes`) against the envelope. If the
+    last one ends before the music's biggest passage begins, the program peaks
+    choreographically before the music does, and the climax — usually the
+    busiest footwork in the program — has nothing in it for the eye to rest
+    on. One build had all three held shapes before 0:50 of a 99.6 s program
+    and nothing sustained in the last fifty seconds. The cheapest repair costs
+    no beats: hold one *arm* shape, still and open, for a second or more on
+    the biggest bar, on an element that is already travelling.
+
+13d. **Phrase over the units when the units are short.** A back half made of
+    1.3-second connectors reads as uniformly busy no matter how good each one
+    is, because weight, suspension and attack are all *differences* and there
+    are none. You usually cannot lengthen the elements — the elements are the
+    program — so phrase the arms across three or four of them: one unbroken
+    rise from low to overhead over three turns, instead of three separate
+    arrivals. The feet do not change; the eye starts reading four-second
+    phrases instead of 1.3-second events.
+
 14. **Come out of a spin into something.** Time the spin so its exit lands on
     the next lift.
 
@@ -268,7 +338,7 @@ counts as beat numbers so nobody converts by hand.
 **There are two clocks.** Counts, anchors, `fmtTime`, `chain` and the harness
 `envelope`/`music` block are all in **program time** (0 = beat 1&1). The audio
 plays at `program time + program.offset` (the profile's offset; for the
-current profile, La La Land at 126 bpm, 0.453 s ≈ one beat). Never quote a
+current profile, a 126 bpm track, 0.453 s ≈ one beat). Never quote a
 time off the raw waveform without subtracting the offset. A 2-beat jump
 element takes off ~0.3 s after it starts, so "flip on 5&2" means the element
 *starts* on 5&2.
@@ -298,7 +368,7 @@ given sequence spans of 0.29–0.48 and an end at 13–27%. So:
   keep the best; `--starts keep` continues from the aims already in the file;
 - **`program.start.heading` is the lever for the far end.** It is in
   **degrees** (`buildPath` multiplies by `DEG`): 0 faces +x (the right end),
-  180 faces −x (the left end). *Example from the La La Land build: C3 uses
+  180 faces −x (the left end). *Worked example from one 100-second free skate: C3 uses
   0.25 — i.e. straight down the rink.* The opening's ~30 m of near-straight
   travel goes where the heading points, so face the end you want the first
   stop at. Write 2–3 start variants *before* the first steer, steer them in

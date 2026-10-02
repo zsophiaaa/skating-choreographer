@@ -21,7 +21,7 @@ counter, rocker, choctaw**. `turnFamily(libId)` in `js/engine.js` tells you.
 **Three turns and mohawks are NOT difficult turns.** They count for nothing.
 Use them deliberately — as the cheap way to change feet, and as the separator
 between clusters (below) — but never mistake a sequence full of them for a hard
-one. *Example from the La La Land build: the first sequence was eleven turns
+one. *Worked example from one 100-second free skate: the first sequence was eleven turns
 and audited at 5 difficult = notional level 1, because the three-turns were
 padding.*
 
@@ -46,7 +46,7 @@ CLUSTER B  — the same turns mirrored on the RIGHT foot
 TAIL       — a bracket, then a cross roll (or a mirrored mohawk) that lands on the next jump's edge
 ```
 
-*Example from the La La Land build (`climax` variant A in js/variants.js):*
+*Worked example from one 100-second free skate (`climax` variant A in js/variants.js):*
 counter, bracket, twizzle · mohawk, three · counter, bracket, twizzle ·
 bracket, cross roll — "three on the left, the same three on the right". 7
 difficult turns and the skater can say it back.

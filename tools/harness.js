@@ -13,6 +13,11 @@
      node tools/harness.js chain   <program.json>            # print the chain in counts
      node tools/harness.js lib     [category]                # list library elements with codes/dist
 
+   An element may carry `route` (which way this phrase should travel: left,
+   right, near, far, diagonal, ne/nw/se/sw) and `zone` (WHERE on the ice it
+   should happen: ne/nw/se/sw corners as seen on a diagram from above, e/w
+   ends, n/s sides, centre). `verify` reports both under placement.
+
    A program file is the app's save format: { format, version, program: {...} }.
    `anchor` targets are seconds, or "@beat" for a beat number (counts: beat =
    (N-1)*8 + (M-1)). The last element is stretched to end exactly on the music.
@@ -66,7 +71,7 @@ function loadProgram(arg) {
       const bad = els.filter((e) => !LIB_BY_ID[e.libId]).map((e) => e.libId);
       if (bad.length) throw new Error('unknown element ids: ' + bad.join(', ') + ' (see: node tools/harness.js lib)');
       // the save format's fields, and only those — a misspelt key would be silently ignored otherwise
-      const FIELDS = ['libId', 'mirror', 'beats', 'radiusScale', 'aim', 'gapBefore', 'note', 'chst', 'arms', 'distScale', 'route'];
+      const FIELDS = ['libId', 'mirror', 'beats', 'radiusScale', 'aim', 'gapBefore', 'note', 'chst', 'arms', 'distScale', 'route', 'zone'];
       const badKeys = els.flatMap((e, i) => Object.keys(e).filter((k) => !FIELDS.includes(k)).map((k) => '#' + i + ' ' + e.libId + '.' + k));
       if (badKeys.length) throw new Error('unknown element fields: ' + badKeys.join(', ') + ' (save format: ' + FIELDS.join(', ') + ')');
       // an unknown arm pose falls back to second position and an unknown phrase to nothing — refuse both
@@ -86,7 +91,7 @@ function saveProgram(p, file) {
     program: { name: p.name, bpm: p.bpm, offset: p.offset, speedScale: p.speedScale, level: p.level, start: p.start, autoSteer: p.autoSteer,
       notes: p.notes || '', credit: p.credit || '', musicName: p.musicName, musicDuration: p.musicDuration, hits: p.hits || [],
       elements: p.elements.map((e) => ({ libId: e.libId, mirror: e.mirror, beats: e.beats, radiusScale: e.radiusScale, aim: e.aim,
-        gapBefore: e.gapBefore, note: e.note, chst: e.chst, arms: e.arms, distScale: e.distScale, route: e.route })) } }; })()`);
+        gapBefore: e.gapBefore, note: e.note, chst: e.chst, arms: e.arms, distScale: e.distScale, route: e.route, zone: e.zone })) } }; })()`);
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
@@ -141,6 +146,7 @@ function report(p) {
                    heldShapes: q.heldShapes.map((h) => '#' + h.idx + ' ' + h.libId + ' ' + h.seconds.toFixed(1) + 's' + (h.ok ? '' : ' !')),
                    hardConnectors: q.hardConnectors.map((h) => '#' + h.idx + ' ' + h.libId + ' d' + h.diff),
                    routes: q.routes.map((r) => '#' + r.idx + ' ' + r.libId + ' ' + r.want + ' -> ' + r.got.toFixed(0) + '°' + (r.ok ? '' : ' !')),
+                   zones: (q.zones || []).map((z) => '#' + z.idx + ' ' + z.libId + ' ' + z.count + ' wants ' + z.want + ' -> ' + z.metres + ' m away at [' + z.at + ']' + (z.ok ? '' : ' !')),
                    fatigueAtJumps: q.fatigueAtJumps.map((v) => +v.toFixed(2)),
                    steeredInsideElements: q.steeredInsideElements.map((x) => '#' + x.idx + ' ' + x.libId + ' ' + x.degrees.toFixed(0) + '°'),
                    speedStep: q.speedStep.map((x) => '#' + x.idx + ' ' + x.libId + ' ' + x.from.toFixed(1) + '>' + x.to.toFixed(1)),
@@ -154,7 +160,7 @@ function report(p) {
                            armFraction: +sq.armFraction.toFixed(2), lengthFrac: q.chstSpan ? +q.chstSpan.lengthFrac.toFixed(3) : null,
                            widthFrac: q.chstSpan ? +(q.chstSpan.width / RINK.W).toFixed(2) : null,
                            turnsPerSecond: +sq.turnsPerSecond.toFixed(2), longestOneFootSeconds: +sq.longestOneFootSeconds.toFixed(1), seconds: +sq.seconds.toFixed(1) } : null,
-      material: { crossoverShare: +q.crossoverShare.toFixed(2), speedBuilderShare: +q.builderShare.toFixed(2), distinct: q.distinct, oneOffs: q.oneOffs,
+      material: { crossoverShare: +q.crossoverShare.toFixed(2), speedBuilderShare: +q.builderShare.toFixed(2), distinct: q.distinct, oneOffs: q.oneOffs, memorable: q.memorable,
                   maxGlideSeconds: +Math.max(0, ...p.elements.map((e) => (e.gapBefore || 0) * 60 / p.bpm)).toFixed(1) },
       pose: { worstFootworkJointMove_m: +worst.toFixed(3), framesOver20cm: over },
       arms: (() => {

@@ -120,13 +120,16 @@ elements) rather than the steer.
 | | `steeredInsideElements`, `speedStep`, `afterStop`, `heldBeforeJumpOrSpin`, `fatigueAtJumps` | `[]` / all under 0.85 |
 | `stepSequence` | `turnsPerSecond`, `longestOneFootSeconds` | ≤ 0.6, ≤ 4.5 |
 | `material` | `speedBuilderShare` | ≥ 0.35 |
-| | `distinct` | set the bar from the element content: ~24 for a short deck; a full Aspire 4 deck with two combinations lands 31–36 when clean (example: five clean La La Land programs) |
+| | `memorable` | a boolean against `PLACE.memorableDistinct` (24). **It is calibrated for a short deck and a full deck cannot hit it** — a two-combination Aspire 4 program lands 31–36 distinct, so `memorable: false` there is the flag being out of range, not a defect. Judge memorability by `oneOffs` and by whether anything *repeats on purpose* (one entry used for both flips, one exit after every jump), not by this boolean |
+| | `distinct` | set the bar from the element content: ~24 for a short deck; a full Aspire 4 deck with two combinations lands 31–36 when clean (example: five clean programs from one deck) |
 | | `maxGlideSeconds` | ≤ 1.5 |
 | `arms` | `elementsWithOwnTrack`, `distinctShapes`, `phrases` | most elements; ≥ ~15 shapes; ≥ 3 phrases (dancing hands on every element is a general rule) |
 | | `maxHandSpeedOutsideJumps_mps` / `maxHandSpeed_mps` | ≤ 5 outside jumps, ≤ 8 inside (`ARM_PACE`) — the engine paces tracks, so higher means a bug or a seam |
 | `pose` | `worstFootworkJointMove_m` | ≤ ~0.8 (a hop or slide); anything else near 1 m is a snap — see **repo-gotchas** |
 | `music` | `jumps[].accentRatio`, `heldOrStopped[].level` | hints: jumps ≥ 2, stops/held shapes low |
 | `warnings` | | read them; each is a rule from **program-craft** or the active profile |
+| the notes | `python3 tools/stamp-counts.py <file> --check` | **0 stale or missing counts** — it exits non-zero otherwise |
+| | every `note` against the report | **read the notes as the skater will, against the numbers.** The report cannot check prose, so this is the one block you check by hand, and it goes wrong every rewrite: a note that names a count the element no longer sits on (`chain` prints the real one), a note that promises more revolutions than `spin.revs` measures, a note that says the music is thinning where `envelope` rises, a note naming the wrong jump of a combination, a note describing a move an earlier version had, two elements sharing one sentence word for word, and seconds quoted that do not match the beats (5 beats at 126 bpm is 2.38 s, not "three seconds"). Also check every element whose arms move says so, or she will not know to move them |
 
 Then `node tools/harness.js score a.json b.json …` to line candidates up:
 `hardFails`, `ruleMisses` (= `misses.length`), `unsafe`, `craft`,

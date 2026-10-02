@@ -47,11 +47,21 @@ All jumps land `RBO`. Flip and Salchow take off from `LBI`, Lutz from `LBO`,
 Loop and Toe loop from `RBO` (so they are the only jumps that can follow
 directly in a combination).
 
+**Build each entry from the standard one** (`program-craft` §8 has the table):
+back crossovers into everything, then `step-bf` forward onto the entry edge or
+turn onto it. Two things are easy to get backwards and both are worth checking
+by hand before steering: a **wind-up turns the opposite way to the element it
+feeds** (clockwise back crossovers before a counter-clockwise spin or Lutz),
+and the element that ends an approach is the one the jump takes its speed
+from, so it must be a long fast edge, not a short slow one. If the skater
+cares where a jump or the step sequence happens, put a `zone` on it
+(`program-craft` §8b) rather than hoping the steer lands it there.
+
 Write the chain as a save file — `{ format: 'skating-choreographer', version: 1,
 program: { name, bpm, offset, speedScale, level, start: {x, y, heading},
 musicDuration, elements: [ { libId, mirror, beats, aim: 0, gapBefore: 0,
 chst, arms, note } ] } }` (`heading` in degrees; `{x:-6,y:0,heading:0.25}` is
-the La La Land start) — then `verify` and check `hard.brokenSeams` is **0
+that worked example's start) — then `verify` and check `hard.brokenSeams` is **0
 before doing anything else**.
 
 **Budget the room before the beats run out.** Lay the scored elements on the
@@ -65,7 +75,12 @@ element too many or a shape held too long, and that is the decision to bring
 to the skater.
 
 Give every element an **arm track and a note** as you write it, not after
-(**arm-choreography**). Mark the step sequence run `chst: true`, including its
+(**arm-choreography**). **Stamp the counts into the notes** —
+`python3 tools/stamp-counts.py <file>` puts `bar&beat  m:ss` at the front of
+every note, generated from the chain. A skater learns and talks in counts, and
+a note without one is a note they cannot find on the music; a count typed by
+hand goes stale the moment anything above it changes length. Re-run it after
+every change to `beats` or `gapBefore`, and `--check` it before publishing. Mark the step sequence run `chst: true`, including its
 lead-in steps, so it covers half the ice (**step-sequence**).
 
 ## 3. Lock the timings

@@ -18,7 +18,7 @@ function exportJSON(program) {
       elements: program.elements.map((e) => ({
         libId: e.libId, mirror: e.mirror, beats: e.beats,
         radiusScale: e.radiusScale, aim: e.aim, gapBefore: e.gapBefore, note: e.note, chst: e.chst,
-        arms: e.arms, distScale: e.distScale,
+        arms: e.arms, distScale: e.distScale, route: e.route, zone: e.zone,
       })),
     },
   };
@@ -40,7 +40,7 @@ function exportAllJSON(programs) {
       elements: program.elements.map((e) => ({
         libId: e.libId, mirror: e.mirror, beats: e.beats,
         radiusScale: e.radiusScale, aim: e.aim, gapBefore: e.gapBefore, note: e.note, chst: e.chst,
-        arms: e.arms, distScale: e.distScale,
+        arms: e.arms, distScale: e.distScale, route: e.route, zone: e.zone,
       })),
     })),
   };

@@ -61,7 +61,7 @@ checks what is present. Write what the sheet says, nothing it does not.
 3. Record in the profile: the level id, the source line, and the element
    content the skater wants within it.
 
-## 4. Worked example — USFS Aspire 4 free skate (the current profile's level)
+## 4. Worked example — USFS Aspire 4 free skate
 
 Source: USFS *Aspire Program Requirements* 2025 (PDF), read 2026-09; the
 text layer was unreadable and the pages were rendered to PNG and read.
@@ -82,6 +82,17 @@ Encoded as `LEVELS.aspire4`:
 - **Moves in the field** allowed anywhere, not counted as elements.
 
 What the code cannot check: revolutions, position quality. The panel says so.
+
+**`spin.revs` is an estimate, and it is the same estimate for every position.**
+The engine counts revolutions as `PLACE.spinRate` (1.8 rev/s at this level,
+overridable per program with `spinRate`) multiplied by the seconds that
+position is held. A real camel is slower than that and a real scratch spin is
+much faster — a scratch is the fastest position in skating — so the report
+*flatters a camel and underrates a scratch*, and a final scratch spin that
+reads as "barely three revolutions" may be fine on the ice. Do not re-time a
+spin on these numbers alone: ask the skater or the coach to time the actual
+positions and set `spinRate` from that. Report the number with the assumption
+attached, never as a measurement of the skater's actual spinning.
 
 ## 5. Adding another federation's level
 

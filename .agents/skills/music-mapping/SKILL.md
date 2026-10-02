@@ -19,7 +19,7 @@ jump's `accentRatio` (the strongest onset within 0.25 s of takeoff against the
 shape — the quickest check that the layout you wrote is the one the track has.
 
 **Clock:** everything the harness prints is **program time** (0 = beat 1&1);
-the audio runs `offset` later (the profile's offset; 0.453 s for La La Land).
+the audio runs `offset` later (the profile's offset; 0.453 s in one worked example).
 The skater's counts are program time. A jump takes off ~0.3 s into its
 element, so put the element's start on the count. A track's onsets sit up to
 half a beat off the bpm grid — anchor to the count, then check the ratio, not
@@ -37,35 +37,38 @@ What to look for, in order of usefulness:
 | Local bump (.44 among .35s) | an accent | a single jump, a choreo hop, a twizzle — something that lands on one count |
 | Decay to ~0 at the end | the fade | a long edge running out, then the final pose held until it is gone |
 
-Two real examples from this repo, so you can see the reasoning (they are
-examples of the method, not rules):
+Two shapes of track, to show the reasoning (they are examples of the method,
+not rules):
 
-**Interstellar (First Step)** — quiet build, one spike at 1:00, a drop, a second
-broad build to 1:24. The camel→sit sits on the build (0:43–0:54) and exits
-*into* the lift; a catch-foot spiral holds the sustained note through 1:00; the
-back spin sits on the second peak. The user chose the spin timings by ear and
-they matched the envelope exactly — trust that.
+**A slow orchestral build** — quiet build, one spike around the middle, a drop,
+a second broader build to the end. The combination spin goes on the first build
+and exits *into* the spike; a held line (a spiral, caught or not) takes the
+sustained note at the spike itself; the last spin takes the second peak. Here
+the biggest moment went to stillness, not to a jump, because a long sustained
+note wants a line held through it.
 
-**La La Land (Epilogue) — the current profile's track** — a quiet melodic opening (0:00–0:08), a change to
-light music at 0:08 (with a small hit at 0:10 that nobody has used but a
-choreographic hop fits), a long build with accents at 0:16, 0:26 and 0:38, a lift
-at 0:50, a plateau 0:54–1:04 (the spin), a true near-silence at 1:08–1:14,
-then a climax at 1:16 that stays big to the end. The accepted layout: spiral +
-stroking on the opening, a stop at the change, flips on 0:16 and 0:26, the
-Salchow+loop on 0:38, the Ina Bauer on the 0:50 lift, camel→sit on the
-plateau, a **stop at 18&6 with a bunny hop** as it goes quiet, a knee slide in
-the silence, Lutz+Loop on 1:16, the step sequence 1:19–1:31 on the climax,
-the last Lutz at 1:31, lunge into the scratch spin, pose on the last chord.
-The counts are in the profile; the pattern (stop where it goes quiet, light
-move out, hardest jump on the peak, sequence on the climax) is the general
-rule.
+**A jazz or big-band finale** — a quiet melodic opening, a change of character
+early, a long build with three or four accents, a lift, a plateau, a near
+silence two-thirds through, then a climax that stays big to the end. The
+opening takes stroking and an extension; the change of character takes a stop;
+the accents take the jumps; the lift takes the one big held line; the plateau
+takes the required spin; the silence takes a stop, a small choreographic jump
+and something on the ice; the climax takes the hardest jump and then the step
+sequence.
+
+What generalises from both is the *order of decisions*, not the layout: find
+the silences and the peak first, decide what the peak gets (hardest jump or
+held line — see below), put the required spin on the longest steady passage,
+and let the connecting material fall where it must. A skater's own counts, when
+they have them, outrank all of it.
 
 ## Rules of thumb that survived contact with the user
 
 - **The biggest musical moment gets either the hardest jump or a held line —
-  it is a real trade.** Interstellar gives 1:00 to a spiral (the user's call, a
-  sustained note wants stillness); La La Land gives 1:16 to the Lutz+Loop
-  (because the silence just before it already has the beautiful line). Say which
+  it is a real trade.** in one build the skater gave a sustained
+  spike to a spiral because a held note wants stillness; in another the peak got
+  the hardest jump, because the near-silence just before it already carried the
+  beautiful line. Say which
   you chose and why.
 - **Come out of a spin *into* something.** Time the spin so its exit lands on
   the next lift, not in the middle of nothing.

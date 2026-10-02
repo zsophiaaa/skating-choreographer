@@ -66,7 +66,7 @@ hands and fists actually read on screen. Check a shape by drawing it
 off-screen and POSTing the canvas to `tools/inbox.py` (**harness**):
 
 ```js
-// ts = program-time seconds to draw; these five are from the La La Land program — pick your own moments
+// ts = program-time seconds to draw; these five are from one worked program — pick your own moments
 const p=App.program, path=App.path, W=240, H=300, ts=[0.8, 26.35, 67.8, 84.9, 99.2];
 const cv=document.createElement('canvas'); cv.width=W*ts.length; cv.height=H; const ctx=cv.getContext('2d');
 ctx.fillStyle='#0b1a26'; ctx.fillRect(0,0,cv.width,H);
@@ -164,17 +164,49 @@ seventeen programs in the gallery all sit at 3.8–4.9 with the pacing on.
   `compose()` and only then applies the seam, gap and foot-change fades. Do
   not reorder it — the hands snapped 1.2 m at every seam the first time.
 
+## Where the phrases go
+
+List every moving phrase in the program with the time it happens
+(`arms.phrases` names them; `chain` gives the times) and lay that list against
+the envelope. **The hands must not get quieter as the music gets louder.** It
+is an easy mistake to make, because the opening is where the choreographing
+feels most free and the climax is where the elements are: one build had seven
+of its nine phrases before 0:52, and the twenty-two-second big-band climax —
+the half the skater is actually judged on — carried one. The loud passage
+wants the loud vocabulary (jazz hands, boxing, shakes, hat tips); the quiet
+opening can live on shapes.
+
+**Use the skater's own words first.** If they named a quality — "boxing",
+"rolling", "hands go up and down" — find the element it belongs on before
+inventing anything. A phrase they asked for by name and never got is a worse
+miss than a phrase that is merely ordinary, and it is the first thing they
+notice.
+
 ## Write the note too
 
 Every element carries a `note`; end it with `Hands: …` — one or two sentences
 a skater can read at the rink: what the hands do, what the head does, why,
-tied to the music (e.g. "on the 0:26 accent" in the La La Land notes, "as it
+tied to the music (e.g. "on the 0:26 accent" in a worked program's notes, "as it
 goes quiet"). The track moves
 the model; the note tells the human.
+
+**Name the gesture where it actually happens.** A note promising a hat tip on
+an element whose track has no `hat_tip`, and a `hat_tip` keyframe on an
+element whose note never mentions it, is the same bug twice — the skater
+rehearses one and performs the other. After writing the arms, read each note
+against its own track.
+
+**Eyes.** There is no gaze or head track in the engine — `head` is baked into
+each pose — so focus can only live in the note, and it is the first thing a
+dancer notices missing. A program that says what the hands do fifty-nine times
+and never says where to look reads as skating with decoration, because the
+decoration is all below the shoulder. Put a four-word `Eyes:` clause on every
+highlight: the held shapes, the spin, the stops, the biggest jump, the final
+pose.
 
 ## Measuring it
 
 `node tools/harness.js verify` → `arms: { elementsWithOwnTrack, distinctShapes,
 phrases, handShapeKeyframes, maxHandSpeed_mps }` and `stepSequence.armFraction`
-(must be 1). *Example from the La La Land build (C — Harder v3): 39/51 own
+(must be 1). *Worked example from one 100-second free skate (C — Harder v3): 39/51 own
 tracks, 29 shapes, 7 phrases, 7.9 m/s peak (in a jump).*
