@@ -1143,7 +1143,20 @@ function analyzePlacement(program, path) {
     for (let i = 1; i < pts.length; i++) { let d = pts[i].h - pts[i - 1].h; d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI; turn += d; arc += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y); }
     const deg = Math.abs(turn) / DEG, radius = deg > 3 ? arc / Math.abs(turn) : 99;
     const L = PLACE.lobe;
-    return Object.assign(tag(sg), { turn: Math.round(turn / DEG), radius, ok: deg >= L.minTurn && deg <= L.maxTurn && radius >= L.minRadius && radius <= L.maxRadius });
+    // A crossover run curls the way its feet make it curl: right-over-left goes
+    // one way and left-over-right the other, and a skater cannot do the opposite
+    // on the same feet. The steer aims each element, and a shallow lobe can be
+    // bent the wrong way by aiming — which silently turned a clockwise wind-up
+    // into an anti-clockwise one on the ice while the chain still read `.R`.
+    // `natural` is the element's own curl (mirroring flips its sign).
+    // the run's own direction is the sign its arc phases curve in (resolve()
+    // has already applied `mirror` to the edge codes)
+    const r0 = resolve(sg.inst), codes = (r0.phases || sg.lib.phases || []).filter((ph) => ph.k === 'arc');
+    const natural = codes.length ? Math.sign(codes.reduce((t, ph) => t + curveSignOf(ph.code), 0)) : 0;
+    const reversed = natural !== 0 && deg > 5 && Math.sign(turn) !== natural;
+    return Object.assign(tag(sg), { turn: Math.round(turn / DEG), radius, reversed,
+      wanted: natural > 0 ? 'anti-clockwise' : 'clockwise',
+      ok: !reversed && deg >= L.minTurn && deg <= L.maxTurn && radius >= L.minRadius && radius <= L.maxRadius });
   });
 
   const ids = program.elements.map((e) => e.libId);
@@ -1336,6 +1349,18 @@ async function steerProgramAsync(program, opts = {}) {
     const sideShort = Math.max(0, PLACE.sideShare - topSide / sm.length) + Math.max(0, PLACE.sideShare - botSide / sm.length);
     const sidePen = sideShort > 0 ? 150 + sideShort * 10000 : 0;
     const cornerPen = h.reduce((t, v) => t + (v * DT < PLACE.cornerSeconds ? 60 + (PLACE.cornerSeconds - v * DT) * 100 : 0), 0);
+    // a crossover run bent the opposite way from the feet that make it
+    let lobeDirPen = 0;
+    for (const sg of path.segs) {
+      if (!/^xover|^progressive/.test(sg.lib.id)) continue;
+      const r0 = resolve(sg.inst), arcs = (r0.phases || sg.lib.phases || []).filter((ph) => ph.k === 'arc');
+      if (!arcs.length) continue;
+      const natural = Math.sign(arcs.reduce((t, ph) => t + curveSignOf(ph.code), 0));
+      const pts = sm.filter((q) => q.t >= sg.t0 && q.t <= sg.t1);
+      let turn = 0;
+      for (let i = 1; i < pts.length; i++) { let dd = pts[i].h - pts[i - 1].h; dd = ((dd + Math.PI) % TAU + TAU) % TAU - Math.PI; turn += dd; }
+      if (natural !== 0 && Math.abs(turn) / DEG > 5 && Math.sign(turn) !== natural) lobeDirPen += 300;
+    }
     let zonePen = 0;
     for (const sg of path.segs) {
       const want = sg.inst && sg.inst.zone;
@@ -1368,7 +1393,7 @@ async function steerProgramAsync(program, opts = {}) {
     const [rLo, rHi] = PLACE.rotationBand, ccwPct = (ccw / ((ccw + cw) || 1)) * 100;
     const rotPen = Math.max(0, rLo - ccwPct, ccwPct - rHi) * 60;
     return off * 60 - cells.size * 4 - h.reduce((t, v) => t + Math.min(v, 180), 0) * 0.8
-      + imb * imb * 4 + rotPen + Math.max(0, endD - 3.5) ** 2 * 7 + sp * 30 + jp * 260 + safetyPen + chstPen + endPen + sidePen + cornerPen + lobePen + routePen + zonePen;
+      + imb * imb * 4 + rotPen + Math.max(0, endD - 3.5) ** 2 * 7 + sp * 30 + jp * 260 + safetyPen + chstPen + endPen + sidePen + cornerPen + lobePen + routePen + zonePen + lobeDirPen;
   };
 
   const greedy = async (label, n, fn = cost, g = grid) => {
@@ -1625,7 +1650,7 @@ function placementScore(q, a, path) {
   const routes = q.routes ? q.routes.reduce((t, r) => t + (r.ok ? 0 : 10 + (r.dev - PLACE.routeToleranceDeg) * 0.4), 0) : 0;
   const zones = q.zones ? q.zones.reduce((t, z) => t + (z.ok ? 0 : 10 + (z.metres - PLACE.zoneToleranceM) * 1.2), 0) : 0;
   const lobes = q.lobes ? q.lobes.reduce((t, l) => { const L = PLACE.lobe, deg = Math.abs(l.turn);
-    return t + (l.ok ? 0 : 10 + Math.max(0, L.minTurn - deg, deg - L.maxTurn) * 0.5 + Math.max(0, L.minRadius - l.radius, l.radius - L.maxRadius) * 2); }, 0) : 0;
+    return t + (l.ok ? 0 : (l.reversed ? 40 : 0) + 10 + Math.max(0, L.minTurn - deg, deg - L.maxTurn) * 0.5 + Math.max(0, L.minRadius - l.radius, l.radius - L.maxRadius) * 2); }, 0) : 0;
   const cover = q.coveragePct != null ? Math.max(0, PLACE.coverageTarget - q.coveragePct) * 0.5 - Math.min(6, Math.max(0, q.coveragePct - PLACE.coverageTarget)) * 0.3 : 0;   // soft: no step
   // the coach's safety rules: a jump near the boards, a landing with no
   // runway, emergency steering inside a jump or spin — each a step and a
@@ -1737,7 +1762,9 @@ function placementRules(program, path, analysis, q, sq) {
     const l = w && w.it;
     row('lobes', 'craft', l ? `${Math.abs(l.turn)}° r${l.radius.toFixed(1)}` : 'ok', `${L.minTurn}–${L.maxTurn}° r${L.minRadius}–${L.maxRadius}`, 'in', { margin: bad.length ? -1 : 1, at: l, n: bad.length, items: q.lobes,
       lever: 'radiusScale on the run, or another aim',
-      msg: l ? `${named(l)} ${Math.abs(l.turn) < L.minTurn ? 'run nearly straight' : Math.abs(l.turn) > L.maxTurn ? 'corkscrew round ' + Math.abs(l.turn) + '°' : 'sit on a ' + l.radius.toFixed(1) + ' m radius'} — crossovers are skated on an edge: a lobe of ${L.minTurn}–${L.maxTurn}° on a ${L.minRadius}–${L.maxRadius} m circle.` : '' }); }
+      msg: l ? (l.reversed
+        ? `${named(l)} curve ${l.turn > 0 ? 'anti-clockwise' : 'clockwise'} on the ice, but those feet make a ${l.wanted} lobe — the aims are bending the run the wrong way round.`
+        : `${named(l)} ${Math.abs(l.turn) < L.minTurn ? 'run nearly straight' : Math.abs(l.turn) > L.maxTurn ? 'corkscrew round ' + Math.abs(l.turn) + '°' : 'sit on a ' + l.radius.toFixed(1) + ' m radius'} — crossovers are skated on an edge: a lobe of ${L.minTurn}–${L.maxTurn}° on a ${L.minRadius}–${L.maxRadius} m circle.`) : '' }); }
 
   // --- spins ------------------------------------------------------------------
   { const w = worst(q.spins, (s) => s.fromCentre, 'max');

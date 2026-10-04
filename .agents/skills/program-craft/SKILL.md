@@ -203,6 +203,19 @@ is facing where.
    not say, ask, and write the answer down. Nothing in a program is worth less
    than a difficult thing done badly on the way to a jump.
 
+8d. **A crossover run curls the way the feet make it curl.** Right-over-left
+   goes one way and left-over-right the other; a skater cannot do the opposite
+   on the same feet. But a crossover run's lobe is shallow enough that *aiming*
+   can bend it the other way round, and then the chain still reads `.R` while
+   the skater on the ice circles the wrong way. It is invisible in the save
+   file and obvious the moment anyone watches. `lobes` reports the measured
+   turn with its sign and flags `reversed` against the element's own edges
+   (`curveSignOf` on its arc phases); the steer pays 300 for one. **Check the
+   sign, not just the magnitude** — especially on a wind-up, where the whole
+   point is which way it goes. Two presets in this repo shipped with a reversed
+   run for months before the check existed, and a skater spotted one by eye
+   before the harness could.
+
 9. **Rotation balance 42–58% CCW** (`PLACE.rotationBand`). Forward crossovers on LFO and backward on
    RBO both turn left; mirror half the runs (`mirror: true`) so the deck does
    not spin one way. Rotation also depends on placement — `buildPath` bends

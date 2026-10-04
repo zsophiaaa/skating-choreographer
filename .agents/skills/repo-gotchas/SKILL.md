@@ -92,6 +92,14 @@ description: The failure modes specific to working on this repo through the brow
   Locate elements by `libId` (and `mirror`) after any splice, never by the
   position you printed before it. A shifted index once put a spin's beats on an
   Ina Bauer and the program came out five seconds long.
+- **The steer can bend a crossover run the wrong way round.** `aim` rotates an
+  element's entry heading, and a shallow lobe will happily curve against the
+  edges that define it — so a mirrored (clockwise) wind-up can come out
+  anti-clockwise on the ice while the file still says `mirror: true`. Fixed by
+  measuring the lobe's sign against `curveSignOf` of its arc phases
+  (`lobes[].reversed`), but if you widen a run with `radiusScale` you make it
+  shallower and easier to reverse — re-read the lobe signs after any
+  `radiusScale` change.
 - `git checkout <file>` is blocked as a discard; recover with
   `git show <rev>:<path> > scratch` and rebuild from that.
 - Python `re.sub` with `→` in the *replacement* string raises "bad
