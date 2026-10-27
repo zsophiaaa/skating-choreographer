@@ -583,8 +583,13 @@ function analyze(program, path) {
   for (const seg of path.segs) counts[seg.lib.cat] = (counts[seg.lib.cat] || 0) + 1;
 
   // a jump combination is consecutive jumps with nothing in between — one jump ELEMENT
+  // An unlisted jump (split, stag, ballet, half flip, half loop) is not one of
+  // the six listed jumps: it carries no base value, does not count toward a
+  // level's jump-element cap, and is expressly allowed inside a step sequence.
+  // Counting them like a Lutz made the small dancy jumps unusable in a program
+  // that already had its five elements.
   let jumpElements = 0;
-  for (let i = 0; i < path.segs.length; i++) if (isJumpStart(path.segs, i)) jumpElements++;
+  for (let i = 0; i < path.segs.length; i++) if (isJumpStart(path.segs, i) && !path.segs[i].lib.unlisted) jumpElements++;
   out.summary = {
     elements: path.segs.length,
     time: path.totalTime,
@@ -864,8 +869,10 @@ const ZONE_ANCHORS = { ne: [19, 6.5], nw: [-19, 6.5], se: [19, -6.5], sw: [-19, 
  *  A corner is a point, but an END or a SIDE is a band: "start the sequence from
  *  one end" does not care how wide across the rink it starts, so e/w measure
  *  along the length only and n/s across the width only. */
+function zoneName(z) { return z && typeof z === 'object' ? z.at : z; }
+function zoneWithin(z) { return (z && typeof z === 'object' && +z.within) || PLACE.zoneToleranceM; }
 function zoneDistance(zone, x, y) {
-  const k = String(zone).toLowerCase(), a = ZONE_ANCHORS[k];
+  const k = String(zoneName(zone)).toLowerCase(), a = ZONE_ANCHORS[k];
   if (!a) return 0;
   if (k === 'e' || k === 'w') return Math.abs(x - a[0]);
   if (k === 'n' || k === 's') return Math.abs(y - a[1]);
@@ -971,6 +978,7 @@ function analyzePlacement(program, path) {
   for (let i = 0; i < segs.length; i++) {
     const s = segs[i];
     if (!isJumpStart(segs, i)) continue;
+    if (s.lib.unlisted) continue;   // choreography, not a scored element
     const m = sampleAt(path, s.t0);
     const dCentre = Math.hypot(m.x, m.y);
     const dCorner = Math.min(...PLACE.corners.map((c) => dist([m.x, m.y], c)));
@@ -1046,11 +1054,14 @@ function analyzePlacement(program, path) {
   const zones = [];
   for (const s of segs) {
     const want = s.inst && s.inst.zone;
-    if (!want || !ZONE_ANCHORS[String(want).toLowerCase()]) continue;
-    const m = sampleAt(path, s.t0);
-    const d = zoneDistance(want, m.x, m.y);
-    zones.push(Object.assign(tag(s), { want, metres: +d.toFixed(2), at: [+m.x.toFixed(1), +m.y.toFixed(1)],
-      ok: d <= PLACE.zoneToleranceM }));
+    if (!want || !ZONE_ANCHORS[String(zoneName(want)).toLowerCase()]) continue;
+    // where the element HAPPENS: a jump is its takeoff and a sequence is where it
+    // starts, but a spin is where it turns — its entry arc is travel, not the
+    // element, so measuring a spin at t0 reports the edge before it instead.
+    const m = sampleAt(path, s.lib.cat === 'spins' ? (s.t0 + s.t1) / 2 : s.t0);
+    const d = zoneDistance(want, m.x, m.y), lim = zoneWithin(want);
+    zones.push(Object.assign(tag(s), { want: zoneName(want), within: lim, metres: +d.toFixed(2),
+      at: [+m.x.toFixed(1), +m.y.toFixed(1)], ok: d <= lim }));
   }
   // held shapes: long enough to read, and what they run into
   const heldShapes = segs.map((s, i) => ({ s, i })).filter(({ s }) => s.lib.cat === 'field' && s.dist > 0)
@@ -1364,10 +1375,10 @@ async function steerProgramAsync(program, opts = {}) {
     let zonePen = 0;
     for (const sg of path.segs) {
       const want = sg.inst && sg.inst.zone;
-      if (!want || !ZONE_ANCHORS[String(want).toLowerCase()]) continue;
-      const m = sampleAt(path, sg.t0);
-      const d = zoneDistance(want, m.x, m.y);
-      if (d > PLACE.zoneToleranceM) zonePen += 40 + (d - PLACE.zoneToleranceM) * 8;
+      if (!want || !ZONE_ANCHORS[String(zoneName(want)).toLowerCase()]) continue;
+      const m = sampleAt(path, sg.lib.cat === 'spins' ? (sg.t0 + sg.t1) / 2 : sg.t0);
+      const d = zoneDistance(want, m.x, m.y), lim = zoneWithin(want);
+      if (d > lim) zonePen += 40 + (d - lim) * 8;
     }
     let routePen = 0;
     for (let i = 0; i < path.segs.length; i++) {
@@ -1648,7 +1659,7 @@ function placementScore(q, a, path) {
   const sides = q.sides ? miss(PLACE.sideShare - q.sides.top, 300, 0.05, 20) + miss(PLACE.sideShare - q.sides.bottom, 300, 0.05, 20) : 0;
   const corners = q.cornerSeconds ? q.cornerSeconds.reduce((t, v) => t + miss(PLACE.cornerSeconds - v, 10, 1, 1), 0) : 0;
   const routes = q.routes ? q.routes.reduce((t, r) => t + (r.ok ? 0 : 10 + (r.dev - PLACE.routeToleranceDeg) * 0.4), 0) : 0;
-  const zones = q.zones ? q.zones.reduce((t, z) => t + (z.ok ? 0 : 10 + (z.metres - PLACE.zoneToleranceM) * 1.2), 0) : 0;
+  const zones = q.zones ? q.zones.reduce((t, z) => t + (z.ok ? 0 : 10 + (z.metres - (z.within || PLACE.zoneToleranceM)) * 1.2), 0) : 0;
   const lobes = q.lobes ? q.lobes.reduce((t, l) => { const L = PLACE.lobe, deg = Math.abs(l.turn);
     return t + (l.ok ? 0 : (l.reversed ? 40 : 0) + 10 + Math.max(0, L.minTurn - deg, deg - L.maxTurn) * 0.5 + Math.max(0, L.minRadius - l.radius, l.radius - L.maxRadius) * 2); }, 0) : 0;
   const cover = q.coveragePct != null ? Math.max(0, PLACE.coverageTarget - q.coveragePct) * 0.5 - Math.min(6, Math.max(0, q.coveragePct - PLACE.coverageTarget)) * 0.3 : 0;   // soft: no step
@@ -1831,9 +1842,9 @@ function placementRules(program, path, analysis, q, sq) {
       msg: w && w.v > PLACE.fatigueMax ? `${named(w.it)} is ${w.it.hardest ? 'the hardest jump in the program' : `in the last ${Math.round(PLACE.lateJumpShare * 100)}%`} and takes off at ${Math.round(w.v * 100)}% of peak fatigue.` : '' }); }
   { const bad = (q.zones || []).filter((z) => !z.ok);
     const w = worst(q.zones || [], (z) => z.metres, 'max');
-    row('zone.place', 'craft', w ? w.v : 0, PLACE.zoneToleranceM, 'max', { unit: 'm', at: bad[0] || (w && w.it), n: bad.length,
+    row('zone.place', 'craft', w ? w.v : 0, bad.length ? bad[0].within : PLACE.zoneToleranceM, 'max', { unit: 'm', at: bad[0] || (w && w.it), n: bad.length,
       items: q.zones || [], lever: 'the aims before it (the steer honours zone); or move it to a zone it can reach',
-      msg: bad.length ? `${named(bad[0])} was asked for the ${bad[0].want} zone and happens ${bad[0].metres} m from it.` : '' }); }
+      msg: bad.length ? `${named(bad[0])} was asked for the ${bad[0].want} zone within ${bad[0].within} m and happens ${bad[0].metres} m from it.` : '' }); }
   { const w = worst(q.jumps.filter((j) => j.beatsAfterTurn != null), (j) => j.beatsAfterTurn, 'min');
     row('jump.afterTurn', 'craft', w ? w.v : null, PLACE.chstToJumpBeats, 'min', { unit: 'beats', at: w && w.it, n: w && w.v < PLACE.chstToJumpBeats ? 1 : 0,
       lever: 'end the sequence on an edge of two beats before the takeoff',
@@ -1941,16 +1952,18 @@ function checkLevelRules(L, path, issues) {
   const jumps = path.segs.filter((s) => s.lib.cat === 'jumps');
   const spins = path.segs.filter((s) => s.lib.cat === 'spins');
 
-  // permitted jump list
+  // permitted jump list — an unlisted jump (split, stag, ballet, half flip,
+  // half loop) is not a listed jump, so a level's list of listed jumps says
+  // nothing about it; it is allowed as choreography at any level.
   if (A.permittedJumps) {
-    const illegal = [...new Set(jumps.filter((s) => !A.permittedJumps.includes(s.lib.id)).map((s) => s.lib.name))];
+    const illegal = [...new Set(jumps.filter((s) => !s.lib.unlisted && !A.permittedJumps.includes(s.lib.id)).map((s) => s.lib.name))];
     if (illegal.length) issues.push({ lvl: 'err', msg: `Not permitted at ${L.name}: ${illegal.join(', ')}.` });
   }
 
   // max N of any same jump
   if (A.maxSameJump) {
     const counts = {};
-    for (const s of jumps) counts[s.lib.name] = (counts[s.lib.name] || 0) + 1;
+    for (const s of jumps) if (!s.lib.unlisted) counts[s.lib.name] = (counts[s.lib.name] || 0) + 1;
     const over = Object.entries(counts).filter(([, n]) => n > A.maxSameJump).map(([n, c]) => `${n} ×${c}`);
     if (over.length) issues.push({ lvl: 'err', msg: `Max ${A.maxSameJump} of any same jump — you have ${over.join(', ')}.` });
   }
@@ -1978,7 +1991,7 @@ function checkLevelRules(L, path, issues) {
 
   // jump-element count is checked generically, but say it in Aspire terms
   const jumpElements = path.segs.length ? runs.reduce((a, b) => a + b, 0) : 0;
-  const soloJumps = jumps.length - jumpElements;
+  const soloJumps = jumps.filter((s) => !s.lib.unlisted).length - jumpElements;
   const nElements = soloJumps + runs.length;
   if (nElements > L.maxJumpElements) {
     issues.push({ lvl: 'err', msg: `${nElements} jump elements (${soloJumps} solo + ${runs.length} combination) — max is ${L.maxJumpElements}.` });

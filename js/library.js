@@ -602,7 +602,7 @@ E({ id: 'pivot-f', name: 'Forward Pivot', cat: 'field', diff: 2, entry: 'LFI', e
   ext: 'Keep the circling leg long and the body tall over the anchored pick.',
   tags: ['pivot', 'entry', 'field move'] });
 
-E({ id: 'toe-drag', name: 'Toe Drag', cat: 'field', diff: 3, entry: 'LFO', exit: 'LFO',
+E({ id: 'toe-drag', name: 'Toe Drag', cat: 'choreo', diff: 3, entry: 'LFO', exit: 'LFO',
   beats: 4, dist: 8,
   phases: [{ k: 'arc', f: 1, r: 14, code: 'LFO', both: true }],
   poses: [{ t: 0, pose: 'glide' }, { t: 0.3, pose: 'drag' }, { t: 0.8, pose: 'drag' }, { t: 1, pose: 'glide' }],
@@ -694,21 +694,21 @@ JUMP({ id: 'lutz-2', name: 'Double Lutz', diff: 5, entry: 'LBO', exit: 'RBO', re
   tip: 'Long outside edge into the corner. The counter-rotation must be held to the very last moment.',
   ext: 'Keep the shoulders square over the entry edge for a full 2 seconds.', tags: ['jump', 'double', '2Lz'] });
 
-JUMP({ id: 'half-loop', name: 'Half Loop (Euler)', diff: 3, entry: 'RBO', exit: 'LBI', rev: 1, dist: 6, cost: 3,
+JUMP({ id: 'half-loop', unlisted: true, name: 'Half Loop (Euler)', diff: 3, entry: 'RBO', exit: 'LBI', rev: 1, dist: 6, cost: 3,
   tip: 'Lands on the opposite back inside edge — used as the middle jump of a three-jump combination.',
   ext: 'Land quietly, no scrape. It is a connector, not a highlight.', tags: ['jump', 'euler', 'half loop', 'combination'] });
 
-JUMP({ id: 'half-flip', name: 'Half Flip', diff: 2, entry: 'LBI', exit: 'RFI', rev: 0.5, dist: 5, cost: 3,
+JUMP({ id: 'half-flip', unlisted: true, name: 'Half Flip', diff: 2, entry: 'LBI', exit: 'RFI', rev: 0.5, dist: 5, cost: 3,
   tip: 'Half rotation from a back inside edge onto a forward inside edge, often into a lunge.',
   ext: 'Land on a bent knee and flow out — do not stop dead.', tags: ['jump', 'half flip', 'connector'] });
 
-JUMP({ id: 'split-jump', name: 'Split Jump', diff: 3, entry: 'LBI', exit: 'RFI', rev: 0.5, dist: 7, cost: 4,
+JUMP({ id: 'split-jump', unlisted: true, name: 'Split Jump', diff: 3, entry: 'LBI', exit: 'RFI', rev: 0.5, dist: 7, cost: 4,
   airPose: 'jump_air_split', height: 0.45,
   tip: 'A half-rotation jump into a split position. Reads much bigger than it is.',
   ext: 'Both legs straight, both toes pointed, arms reaching along the legs. Hit the split at the TOP of the jump.',
   tags: ['jump', 'split', 'highlight', 'choreo jump'] });
 
-JUMP({ id: 'stag-jump', name: 'Stag Jump', diff: 3, entry: 'LBI', exit: 'RFI', rev: 0.5, dist: 7, cost: 4,
+JUMP({ id: 'stag-jump', unlisted: true, name: 'Stag Jump', diff: 3, entry: 'LBI', exit: 'RFI', rev: 0.5, dist: 7, cost: 4,
   airPose: 'jump_air_stag', height: 0.45,
   tip: 'Front knee bent, back leg straight. A gorgeous choreo jump that hides limited flexibility.',
   ext: 'Front thigh parallel to the ice, back leg fully lengthened. Chest lifted.',
@@ -729,12 +729,12 @@ JUMP({ id: 'bunny-hop', name: 'Bunny Hop', cat: 'choreo', diff: 1, entry: 'LFO',
   ext: 'Kick the free leg forward straight and pointed — the kick is the whole trick.',
   tags: ['jump', 'bunny hop', 'basic', 'choreo jump'] });
 
-JUMP({ id: 'ballet-jump', name: 'Ballet Jump', diff: 2, entry: 'RBO', exit: 'RBO', rev: 0.5, dist: 5, cost: 3,
+JUMP({ id: 'ballet-jump', unlisted: true, name: 'Ballet Jump', diff: 2, entry: 'RBO', exit: 'RBO', rev: 0.5, dist: 5, cost: 3,
   airPose: 'jump_air_stag', height: 0.30,
   tip: 'A toe-assisted hop with the free leg kicked forward. Great on a musical accent.',
   ext: 'Kicking leg straight to hip height, arms in a clear ballet shape.', tags: ['jump', 'ballet jump', 'choreo jump'] });
 
-JUMP({ id: 'toe-walley', name: 'Toe Walley', diff: 3, entry: 'RBI', exit: 'RBO', rev: 1, dist: 7, cost: 4,
+JUMP({ id: 'toe-walley', unlisted: true, name: 'Toe Walley', diff: 3, entry: 'RBI', exit: 'RBO', rev: 1, dist: 7, cost: 4,
   tip: 'Like a toe loop but off the back INSIDE edge. Rare and a nice thing to have.',
   ext: 'Clean edge in, clean edge out — the whole point is that it is not a toe loop.', tags: ['jump', 'toe walley'] });
 

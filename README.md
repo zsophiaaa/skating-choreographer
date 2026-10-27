@@ -10,6 +10,11 @@ step, no dependencies.** Open `index.html` and it works, offline.
 
 ![the skater on the follow camera](docs/img/demo.gif)
 
+**Skated in competition.** A program built with this repo (La La Land, USFS Aspire 4) placed
+3rd of 9 at the NYU Violet Classic, October 2026. About 60% of it is what the agent wrote; the
+arms, a few steps and the musicality were reworked on the ice. Write-up:
+[Claude choreographed 60% of my skating program](https://zsophiaaa.github.io/blog/ai-skating-choreography.html).
+
 | | |
 |---|---|
 | ![overhead: the tracing, with the step sequence's half-ice footprint shaded](docs/img/overhead.png) | ![the judge's-eye view](docs/img/judge.png) |
@@ -130,9 +135,10 @@ the harness `verify`/`score` measure every one. The skater's profile can overrid
 | Start and finish near centre | ≤ 7 m |
 | Arms on every element | every element carries its own `arms` track; ≥ 34% of the step sequence has authored arm movement |
 | The skater's own outline | `route` on an element (left / right / near / far / diagonal) — the phrase travels that way, within 25° |
-| The skater's own placement | `zone` on an element (`ne`/`nw`/`se`/`sw` corners as seen from above, `e`/`w` ends, `centre`) — it happens within 9 m of that anchor |
+| The skater's own placement | `zone` on an element (`ne`/`nw`/`se`/`sw` corners as seen from above, `e`/`w` ends, `centre`) — it happens within 9 m of that anchor, or `{ "at": "centre", "within": 5 }` for a tighter radius; a spin is measured where it turns, not at its entry edge |
 | Standard entries | back crossovers into every jump and spin, the wind-up turning *against* the element it feeds, and a long fast edge last (`program-craft` §8) |
 | Level rules | Aspire 4 caps, the required camel→sit, one ChSt (`checkAspire`) |
+| Unlisted jumps | split, stag, ballet, half flip, half loop are choreography: no base value, not counted toward the jump-element cap or "max N of a jump", allowed in a step sequence |
 
 ## How it was built, and how it was tested
 

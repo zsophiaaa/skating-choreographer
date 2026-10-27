@@ -216,6 +216,14 @@ is facing where.
    run for months before the check existed, and a skater spotted one by eye
    before the harness could.
 
+8e. **Toe work and small jumps are what make a program look danced.** Between
+   the scored elements, a program that is all edges and turns reads as skating;
+   the texture comes from toe steps, toe drags, hops and unlisted jumps (split,
+   stag, ballet, half flip). They cost two counts each, take them from a plain
+   connector beside them, and — because they are unlisted — cost nothing on the
+   element sheet. Put them where the music is playful rather than where it is
+   big, and prefer one on a light bar to three sprinkled evenly.
+
 9. **Rotation balance 42–58% CCW** (`PLACE.rotationBand`). Forward crossovers on LFO and backward on
    RBO both turn left; mirror half the runs (`mirror: true`) so the deck does
    not spin one way. Rotation also depends on placement — `buildPath` bends

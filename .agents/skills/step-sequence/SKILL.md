@@ -13,6 +13,41 @@ the one part the skater cannot read or practise. Build the sequence from
 **individual named turns** and mark them `chst: true` so the rule check still
 counts exactly one sequence.
 
+## Turns travel differently — check the curl before you swap one
+
+Difficult turns are not interchangeable as *pattern*. A counter or a rocker comes
+out of the cusp going essentially the way it went in (natural curl ≈ ±1°); a
+bracket or a three-turn turns the body about 65°. So a sequence of brackets
+*coils* where a sequence of counters *travels*, and a cluster of three brackets
+on one foot can spend 195° of turning without crossing any ice.
+
+That matters twice over:
+
+- **Swapping a turn for another family can break the pattern**, not just the
+  content. Replacing two counters with three brackets once dropped a sequence's
+  half-ice span from 57% to 33% and shoved the jump and the spin that followed
+  it out of place — one cause, three symptoms, and none of them visible in the
+  chain. Read `lobes` and `stepSequence.lengthFrac` after any turn swap.
+- **A curling turn can still travel if you open its lobe.** `radiusScale` on the
+  turn widens the arc without changing the turn, which is usually the cheapest
+  repair: same difficulty, same count, a pattern that goes somewhere.
+
+Plan the cluster so the curls partly cancel (alternate the families or the
+direction) rather than stacking three of the same sign.
+
+## Unlisted jumps belong in a sequence
+
+A split jump, stag jump, ballet jump, half flip, half loop or bunny hop is an
+**unlisted** jump: it is not one of the six listed jumps, it carries no base
+value, it does not count toward a level's jump-element cap or its "max N of any
+same jump", and the rulebook explicitly allows unlisted jumps inside a step
+sequence. They are the cheapest way to make a sequence read as dancing rather
+than as turns — and for a skater at a level whose five jump elements are already
+spent, they are the *only* way to put another jump in the program at all.
+
+In this repo they carry `unlisted: true` in `js/library.js`, and the level checks
+skip them. Anything that counts jumps for a rule should skip them too.
+
 ## What counts (and what does not)
 
 Only six families are ISU **difficult turns**: **twizzle, bracket, loop turn,
